@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  ownerEmail  String   @unique
+  ownerName   String
+  phone       String?
+  waPhoneId   String?  @unique
+  plan        Plan     @default(BETA)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  botConfig     BotConfig?
+  conversations Conversation[]
+  contacts      Contact[]
+  subscription  Subscription?
+
+  @@map("businesses")
+}
+
+model BotConfig {
+  id              String   @id @default(cuid())
+  businessId      String   @unique
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  botName         String   @default("Asistente")
+  welcomeMessage  String   @default("¡Hola! ¿En qué te puedo ayudar hoy? 😊")
+  businessContext String   @db.Text
+  catalog         String?  @db.Text
+  faq             String?  @db.Text
+  humanHandoffKeyword String @default("humano")
+  isActive        Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("bot_configs")
+}
+
+model Contact {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  waId       String
+  name       String?
+  phone      String
+  conversations Conversation[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([businessId, waId])
+  @@map("contacts")
+}
+
+model Conversation {
+  id         String             @id @default(cuid())
+  businessId String
+  business   Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String
+  contact    Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  status     ConversationStatus @default(BOT_ACTIVE)
+  messages   Message[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastMsgAt  DateTime @default(now())
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String       @db.Text
+  waMessageId    String?
+  createdAt      DateTime @default(now())
+
+  @@map("messages")
+}
+
+model Subscription {
+  id               String            @id @default(cuid())
+  businessId       String            @unique
+  business         Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  stripeCustomerId String?
+  stripePriceId    String?
+  status           SubscriptionStatus @default(ACTIVE)
+  plan             Plan
+  currentPeriodEnd DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+enum Plan {
+  BETA
+  PRO
+}
+
+enum ConversationStatus {
+  BOT_ACTIVE
+  HUMAN_TAKEOVER
+  CLOSED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
