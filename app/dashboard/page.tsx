@@ -14,7 +14,10 @@ export default function Dashboard() {
   const [config, setConfig] = useState({ botName: '', businessContext: '', catalog: '', faq: '' })
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      window.location.href = '/sign-in'
+      return null
+  }
     initBusiness()
   }, [user])
 
