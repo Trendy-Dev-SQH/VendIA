@@ -6,8 +6,8 @@ export default function Home() {
       <nav className="flex justify-between items-center px-8 py-4 border-b">
         <div className="text-xl font-bold">Vend<span className="text-purple-600">IA</span></div>
         <div className="flex gap-4">
-        <Link href="https://glorious-flamingo-61.accounts.dev/sign-in" className="text-sm text-gray-600 hover:text-gray-900">Iniciar sesión</Link>
-        <Link href="https://glorious-flamingo-61.accounts.dev/sign-up" className="text-sm bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700">Empezar gratis</Link>
+          <Link href="/sign-in" className="text-sm text-gray-600 hover:text-gray-900">Iniciar sesión</Link>
+          <Link href="/sign-up" className="text-sm bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700">Empezar gratis</Link>
         </div>
       </nav>
       <section className="flex flex-col items-center text-center px-8 py-24">
@@ -18,8 +18,8 @@ export default function Home() {
         <p className="text-xl text-gray-500 max-w-xl mb-10">
           VendIA responde automáticamente a tus clientes en WhatsApp las 24 horas.
         </p>
-        <Link href="https://glorious-flamingo-61.accounts.dev/sign-up" className="bg-purple-600 text-white px-8 py-3 rounded-full text-lg hover:bg-purple-700">
-        Empieza gratis →
+        <Link href="/sign-up" className="bg-purple-600 text-white px-8 py-3 rounded-full text-lg hover:bg-purple-700">
+          Empieza gratis →
         </Link>
       </section>
     </main>
