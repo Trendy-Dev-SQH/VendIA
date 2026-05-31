@@ -5,27 +5,22 @@ import axios from 'axios'
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
-const NAV_ITEMS = [
-  { icon: '⊞', label: 'Dashboard', active: true },
-  { icon: '≡', label: 'Conversaciones' },
-  { icon: '📖', label: 'Base de Conocimiento' },
-  { icon: '👥', label: 'Clientes' },
-  { icon: '⚙', label: 'Configuración' },
-]
-
 export default function Dashboard() {
   const { user } = useUser()
   const [businessId, setBusinessId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [stats, setStats] = useState({ totalConversations: 0, activeConversations: 0, totalMessages: 0, botHandledRate: 0 })
+  const [mobileNav, setMobileNav] = useState('inicio')
+  const [stats, setStats] = useState({
+    totalConversations: 1284,
+    activeConversations: 42,
+    totalMessages: 8500,
+    botHandledRate: 94,
+  })
   const [config, setConfig] = useState({ botName: '', businessContext: '', catalog: '', faq: '' })
 
   useEffect(() => {
-    if (!user) {
-      window.location.href = '/sign-in'
-      return
-    }
+    if (!user) { window.location.href = '/sign-in'; return }
     initBusiness()
   }, [user])
 
@@ -38,7 +33,7 @@ export default function Dashboard() {
           ownerEmail: user?.primaryEmailAddress?.emailAddress,
           ownerName: user?.fullName || 'Dueño',
         })
-      } catch (e) {
+      } catch {
         res = await axios.get(API + '/api/business/email/' + user?.primaryEmailAddress?.emailAddress)
       }
       setBusinessId(res.data.id)
@@ -50,11 +45,9 @@ export default function Dashboard() {
           faq: res.data.botConfig.faq || '',
         })
       }
-      const statsRes = await axios.get(API + '/api/business/' + res.data.id + '/stats')
-      setStats(statsRes.data)
-    } catch (err) {
-      console.error(err)
-    }
+      const s = await axios.get(API + '/api/business/' + res.data.id + '/stats')
+      setStats(s.data)
+    } catch (err) { console.error(err) }
   }
 
   async function saveConfig() {
@@ -64,229 +57,319 @@ export default function Dashboard() {
       await axios.put(API + '/api/business/' + businessId + '/bot-config', config)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-    } catch (err) {
-      console.error(err)
-    }
+    } catch (err) { console.error(err) }
     setSaving(false)
   }
 
   const kpis = [
-    { label: 'Conversaciones', value: stats.totalConversations.toLocaleString(), delta: '+12%', icon: '💬', up: true },
-    { label: 'Activas', value: stats.activeConversations.toString(), delta: '+5%', icon: '⚡', up: true },
-    { label: 'Mensajes procesados', value: stats.totalMessages > 1000 ? (stats.totalMessages/1000).toFixed(1)+'k' : stats.totalMessages.toString(), delta: '~2%', icon: '📨', up: false },
-    { label: 'Resolución IA', value: stats.botHandledRate + '%', delta: '+8%', icon: '✅', up: true },
+    { label: 'CONVERSACIONES', value: stats.totalConversations.toLocaleString(), delta: '+12%', up: true },
+    { label: 'ACTIVAS', value: stats.activeConversations.toString(), delta: '+8%', up: true },
+    { label: 'MENSAJES', value: stats.totalMessages >= 1000 ? (stats.totalMessages/1000).toFixed(1)+'k' : stats.totalMessages.toString(), delta: '+24%', up: true },
+    { label: 'RESOLUCIÓN', value: stats.botHandledRate + '%', delta: '+2%', up: true },
   ]
 
-  const activity = [
-    { time: '10:27', text: 'Cliente solicitó información sobre planes', quote: '"Hola, ¿cuáles son sus precios?"', dot: 'bg-emerald-500' },
-    { time: '10:24', text: 'IA respondió exitosamente', tag: 'Categorizado: Ventas', dot: 'bg-emerald-500' },
-    { time: '10:15', text: 'Sesión iniciada: Carlos Ruiz', dot: 'bg-gray-300' },
-  ]
-
-  const chartBars = [40, 55, 35, 80, 95, 70, 30]
+  const chartBars = [30, 45, 35, 90, 55, 40, 25]
   const days = ['L','M','X','J','V','S','D']
 
+  const navItems = [
+    { key: 'inicio', icon: '⊞', label: 'Inicio' },
+    { key: 'chats', icon: '💬', label: 'Chats' },
+    { key: 'clientes', icon: '👥', label: 'Clientes' },
+    { key: 'ajustes', icon: '⚙', label: 'Ajustes' },
+  ]
+
   return (
-    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
+    <div className="bg-gray-50 min-h-screen w-full">
 
-      {/* Sidebar */}
-      <aside className="w-56 bg-white border-r border-gray-100 flex flex-col flex-shrink-0">
-        <div className="px-5 py-5 border-b border-gray-100">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center text-white text-sm font-bold">V</div>
-            <div>
-              <p className="text-sm font-bold text-gray-900 leading-tight">VendIA</p>
-              <p className="text-xs text-gray-400">SaaS de Automatización</p>
+      {/* Desktop sidebar + main */}
+      <div className="flex w-full">
+
+        {/* Sidebar — hidden on mobile */}
+        <aside className="hidden lg:flex flex-col w-52 xl:w-56 bg-white border-r border-gray-100 min-h-screen fixed top-0 left-0 z-30">
+          <div className="px-4 py-4 border-b border-gray-100 flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0">V</div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-gray-900 truncate">VendIA</p>
+              <p className="text-xs text-gray-400 truncate">SaaS de Automatización</p>
             </div>
           </div>
-        </div>
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {NAV_ITEMS.map((item) => (
-            <button key={item.label} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${item.active ? 'bg-emerald-50 text-emerald-700 font-medium' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
-              <span className="text-base">{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
-        </nav>
-        <div className="px-3 pb-4 space-y-1">
-          <button className="w-full flex items-center gap-2 bg-emerald-700 text-white px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors">
-            <span>+</span> Conectar WhatsApp
-          </button>
-          <div className="flex items-center gap-2 px-3 py-2">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span className="text-xs text-gray-400">Estado de Conexión</span>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-
-        {/* Topbar */}
-        <header className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between flex-shrink-0">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 leading-tight">Dashboard</h1>
-            <p className="text-sm text-gray-400">Resumen de la actividad de tu asistente</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium px-3 py-1.5 rounded-full">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Estado IA: Activo
-            </span>
-            <span className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-600 text-xs font-medium px-3 py-1.5 rounded-full">
-              ⚡ WhatsApp: Conectado
-            </span>
-            <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-50">🔔</button>
-            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-semibold text-emerald-700">
-              {user?.firstName?.[0] || 'U'}
-            </div>
-          </div>
-        </header>
-
-        {/* Content */}
-        <div className="flex-1 overflow-auto px-8 py-6">
-
-          {/* KPIs */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            {kpis.map((kpi, i) => (
-              <div key={i} className="bg-white border border-gray-100 rounded-xl p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-lg">{kpi.icon}</span>
-                  <span className={`text-xs font-medium ${kpi.up ? 'text-emerald-600' : 'text-gray-400'}`}>{kpi.delta} {kpi.up ? '↑' : '—'}</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-1">{kpi.label}</p>
-                <p className="text-2xl font-black text-gray-900 tracking-tight">{kpi.value}</p>
-              </div>
+          <nav className="flex-1 px-2 py-3 space-y-0.5">
+            {[
+              { icon: '⊞', label: 'Dashboard', active: true },
+              { icon: '≡', label: 'Conversaciones' },
+              { icon: '📖', label: 'Base de Conocimiento' },
+              { icon: '👥', label: 'Clientes' },
+              { icon: '⚙', label: 'Configuración' },
+            ].map((item) => (
+              <button key={item.label} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${item.active ? 'bg-emerald-50 text-emerald-700 font-medium' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
+                <span>{item.icon}</span>
+                <span className="truncate">{item.label}</span>
+              </button>
             ))}
+          </nav>
+          <div className="px-2 pb-4 space-y-1">
+            <button className="w-full flex items-center justify-center gap-1.5 bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-emerald-600 transition-colors">
+              + Conectar WhatsApp
+            </button>
+            <div className="flex items-center gap-2 px-3 py-1.5">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse flex-shrink-0"></span>
+              <span className="text-xs text-gray-400 truncate">Estado de Conexión</span>
+            </div>
           </div>
+        </aside>
 
-          <div className="grid grid-cols-3 gap-4 mb-6">
+        {/* Main content */}
+        <div className="w-full lg:ml-52 xl:ml-56 flex flex-col min-h-screen">
 
-            {/* Chart */}
-            <div className="col-span-2 bg-white border border-gray-100 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm">Actividad Semanal</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Mensajes gestionados por la IA</p>
-                </div>
-                <div className="flex gap-1">
-                  <button className="px-3 py-1.5 text-xs bg-gray-900 text-white rounded-lg font-medium">7 Días</button>
-                  <button className="px-3 py-1.5 text-xs text-gray-500 rounded-lg hover:bg-gray-50 font-medium">30 Días</button>
-                </div>
-              </div>
-              <div className="flex items-end gap-2 h-32">
-                {chartBars.map((h, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div className={`w-full rounded-md transition-all ${i === 4 ? 'bg-emerald-700' : 'bg-emerald-100'}`} style={{height: `${h}%`}}></div>
-                    <span className="text-xs text-gray-400">{days[i]}</span>
-                  </div>
-                ))}
+          {/* Mobile topbar */}
+          <header className="lg:hidden bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-emerald-700 rounded-md flex items-center justify-center text-white text-xs font-bold">V</div>
+              <span className="font-bold text-gray-900 text-sm">VendIA</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🔔</span>
+              <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-semibold text-emerald-700">
+                {user?.firstName?.[0] || 'U'}
               </div>
             </div>
+          </header>
 
-            {/* Knowledge base */}
-            <div className="bg-white border border-gray-100 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <p className="font-semibold text-gray-900 text-sm">Base de Conocimiento</p>
-                <button className="text-xs text-emerald-700 font-medium hover:underline">Editar</button>
+          {/* Desktop topbar */}
+          <header className="hidden lg:flex bg-white border-b border-gray-100 px-6 xl:px-8 py-4 items-center justify-between sticky top-0 z-20">
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">Dashboard</h1>
+              <p className="text-xs text-gray-400">Resumen de la actividad de tu asistente</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> IA Online
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full">
+                ⚡ WhatsApp Activo
+              </span>
+              <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-50">🔔</button>
+              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-semibold text-emerald-700">
+                {user?.firstName?.[0] || 'U'}
               </div>
-              <div className="bg-gray-50 rounded-xl p-4 mb-4">
+            </div>
+          </header>
+
+          {/* Page content */}
+          <div className="flex-1 px-4 md:px-6 xl:px-8 py-5 pb-24 lg:pb-8 space-y-5 max-w-6xl w-full mx-auto">
+
+            {/* Mobile status badges */}
+            <div className="lg:hidden flex gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 bg-white border border-gray-100 text-emerald-700 text-xs font-medium px-3 py-1.5 rounded-full shadow-sm">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> IA Online
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-white border border-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full shadow-sm">
+                ⚡ WhatsApp Activo
+              </span>
+            </div>
+
+            {/* Mobile title */}
+            <div className="lg:hidden">
+              <h1 className="text-2xl font-black text-gray-900 tracking-tight">Dashboard</h1>
+            </div>
+
+            {/* KPIs */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {kpis.map((kpi, i) => (
+                <div key={i} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                  <p className="text-xs font-semibold text-gray-400 tracking-widest mb-2">{kpi.label}</p>
+                  <p className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight mb-1">{kpi.value}</p>
+                  <p className="text-xs text-emerald-600 font-medium">↑ {kpi.delta}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Chart + AI brain */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2 bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-5">
+                  <p className="font-semibold text-gray-900 text-sm">Actividad Semanal</p>
+                  <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">Últimos 7 días</span>
+                </div>
+                <div className="flex items-end gap-1.5 h-28 w-full">
+                  {chartBars.map((h, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1 min-w-0">
+                      <div
+                        className={`w-full rounded-md ${i === 3 ? 'bg-emerald-700' : 'bg-emerald-100'}`}
+                        style={{height: `${h}%`}}
+                      ></div>
+                      <span className="text-xs text-gray-400">{days[i]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* AI Brain card */}
+              <div className="bg-gray-900 rounded-xl p-5 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-white border border-gray-100 rounded-lg flex items-center justify-center text-sm">📋</div>
+                  <div className="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center text-lg flex-shrink-0">🧠</div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">Catálogo Principal</p>
-                    <p className="text-xs text-gray-400">Última sinc: Hace 2h</p>
+                    <p className="text-sm font-bold text-white">Cerebro de la IA</p>
+                    <p className="text-xs text-emerald-400">98.2% de precisión en respuestas</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Horario</p>
-                    <p className="text-xs font-semibold text-gray-900">24/7 Activo</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Productos</p>
-                    <p className="text-xs font-semibold text-gray-900">142 items</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bot config quick edit */}
-              <div className="space-y-2">
-                <input
-                  className="w-full text-xs border border-gray-100 rounded-lg px-3 py-2 bg-gray-50 text-gray-700 focus:outline-none focus:border-emerald-300"
-                  placeholder="Nombre del bot"
-                  value={config.botName}
-                  onChange={e => setConfig({...config, botName: e.target.value})}
-                />
-                <textarea
-                  className="w-full text-xs border border-gray-100 rounded-lg px-3 py-2 bg-gray-50 text-gray-700 focus:outline-none focus:border-emerald-300 h-16 resize-none"
-                  placeholder="Descripción del negocio"
-                  value={config.businessContext}
-                  onChange={e => setConfig({...config, businessContext: e.target.value})}
-                />
-                <button
-                  onClick={saveConfig}
-                  disabled={saving}
-                  className="w-full bg-emerald-700 text-white text-xs font-semibold py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50"
-                >
-                  {saving ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar configuración'}
+                <p className="text-sm text-gray-300 leading-relaxed mb-4 flex-1">
+                  La IA ha optimizado 4 flujos de venta hoy sin requerir intervención manual.
+                </p>
+                <button className="w-full bg-white text-gray-900 text-sm font-semibold py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
+                  Configurar Lógica
                 </button>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-3 gap-4">
+            {/* Chat simulator */}
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+              <div className="px-5 pt-4 pb-2">
+                <p className="font-semibold text-gray-900 text-sm mb-3">Simulador de Chat</p>
+                <div className="bg-emerald-700 rounded-xl px-4 py-2.5 flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white text-sm">👤</span>
+                    <span className="text-white text-sm font-medium">Cliente Potencial</span>
+                  </div>
+                  <span className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse"></span>
+                </div>
+                <div className="space-y-2 mb-3 min-h-20">
+                  <div className="bg-gray-50 rounded-xl rounded-tl-sm px-4 py-2.5 max-w-xs">
+                    <p className="text-sm text-gray-700">¿Qué precio tiene el plan SaaS avanzado?</p>
+                  </div>
+                  <div className="flex justify-end">
+                    <div className="bg-emerald-700 rounded-xl rounded-tr-sm px-4 py-2.5 max-w-xs">
+                      <p className="text-sm text-white">El plan Avanzado cuesta $49/mes. Incluye IA ilimitada y 5 canales.</p>
+                      <p className="text-xs text-emerald-200 text-right mt-1">VendIA · 10:42 AM</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-gray-100 px-4 py-3 flex items-center gap-3">
+                <input className="flex-1 text-sm text-gray-500 bg-transparent focus:outline-none min-w-0" placeholder="Probar respuesta de la IA..." />
+                <button className="w-8 h-8 bg-emerald-700 text-white rounded-full flex items-center justify-center text-sm hover:bg-emerald-600 transition-colors flex-shrink-0">▷</button>
+              </div>
+            </div>
+
+            {/* Recent chats */}
+            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <p className="font-semibold text-gray-900 text-sm">Chats Recientes</p>
+                <button className="text-xs text-emerald-700 font-medium hover:underline">Ver todos</button>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { name: 'Marco Polo', msg: 'Interesado en integración con CRM...', time: '12 min', initial: 'M' },
+                  { name: 'Elena Gómez', msg: 'Cita programada para mañana.', time: '1 hr', initial: 'E' },
+                ].map((chat, i) => (
+                  <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-bold text-emerald-700 flex-shrink-0">
+                      {chat.initial}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{chat.name}</p>
+                      <p className="text-xs text-gray-400 truncate">{chat.msg}</p>
+                    </div>
+                    <span className="text-xs text-gray-400 flex-shrink-0">{chat.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Activity feed */}
-            <div className="col-span-2 bg-white border border-gray-100 rounded-xl p-6">
-              <p className="font-semibold text-gray-900 text-sm mb-4">Actividad en tiempo real</p>
+            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+              <p className="font-semibold text-gray-900 text-sm mb-4">Actividad Reciente</p>
               <div className="space-y-4">
-                {activity.map((item, i) => (
-                  <div key={i} className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${item.dot}`}></div>
-                      {i < activity.length - 1 && <div className="w-px flex-1 bg-gray-100 mt-1"></div>}
-                    </div>
-                    <div className="pb-4">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-xs font-medium text-gray-900">{item.time}</span>
-                        <span className="text-xs text-gray-500">{item.text}</span>
-                      </div>
-                      {item.quote && <p className="text-xs text-gray-400 italic">{item.quote}</p>}
-                      {item.tag && <span className="inline-block mt-1 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">{item.tag}</span>}
+                {[
+                  { dot: 'bg-emerald-500', text: 'Base de datos', sub: 'actualizada con 14 nuevos clientes.', time: 'HOY, 09:15 AM' },
+                  { dot: 'bg-emerald-500', text: 'WhatsApp', sub: 'reconectado exitosamente.', time: 'AYER, 06:45 PM' },
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-3 items-start">
+                    <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${item.dot}`}></span>
+                    <div className="min-w-0">
+                      <p className="text-sm text-gray-700"><span className="font-semibold">{item.text}</span> {item.sub}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{item.time}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* AI preview */}
-            <div className="bg-white border border-gray-100 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-sm">👁</span>
-                <p className="font-semibold text-gray-900 text-sm">Vista Previa IA</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-3 space-y-2 mb-3 min-h-40">
-                <div className="bg-white border border-gray-100 rounded-xl rounded-tl-sm px-3 py-2 max-w-48 shadow-sm">
-                  <p className="text-xs text-gray-700">¿Tienen stock del modelo Pro X en color verde bosque?</p>
-                  <p className="text-xs text-gray-400 text-right mt-1">09:41</p>
+            {/* Bot config */}
+            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+              <p className="font-semibold text-gray-900 text-sm mb-4">Configuración del Bot</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-gray-500 font-medium block mb-1">Nombre del bot</label>
+                  <input
+                    className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-emerald-300"
+                    value={config.botName}
+                    onChange={e => setConfig({...config, botName: e.target.value})}
+                    placeholder="Asistente"
+                  />
                 </div>
-                <div className="flex justify-end">
-                  <div className="bg-emerald-100 rounded-xl rounded-tr-sm px-3 py-2 max-w-48">
-                    <p className="text-xs text-emerald-900">¡Hola! Sí, actualmente tenemos 5 unidades disponibles del Pro X Verde Bosque. ¿Te gustaría que reserve una para ti o prefieres pasar por la tienda?</p>
-                    <p className="text-xs text-emerald-600 text-right mt-1">09:42 ✓✓</p>
-                  </div>
+                <div>
+                  <label className="text-xs text-gray-500 font-medium block mb-1">Descripción del negocio</label>
+                  <textarea
+                    className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-emerald-300 h-20 resize-none"
+                    value={config.businessContext}
+                    onChange={e => setConfig({...config, businessContext: e.target.value})}
+                    placeholder="Describe tu negocio..."
+                  />
                 </div>
-              </div>
-              <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
-                <input className="flex-1 text-xs bg-transparent text-gray-500 focus:outline-none" placeholder="Escribe una respuesta..." />
-                <button className="text-gray-300 hover:text-gray-500 text-sm">📎</button>
-                <button className="text-gray-300 hover:text-gray-500 text-sm">🎤</button>
+                <div>
+                  <label className="text-xs text-gray-500 font-medium block mb-1">Catálogo</label>
+                  <textarea
+                    className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-emerald-300 h-20 resize-none"
+                    value={config.catalog}
+                    onChange={e => setConfig({...config, catalog: e.target.value})}
+                    placeholder="Lista tus productos o servicios..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 font-medium block mb-1">Preguntas frecuentes</label>
+                  <textarea
+                    className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-emerald-300 h-20 resize-none"
+                    value={config.faq}
+                    onChange={e => setConfig({...config, faq: e.target.value})}
+                    placeholder="¿Cuáles son sus horarios? ..."
+                  />
+                </div>
+                <button
+                  onClick={saveConfig}
+                  disabled={saving}
+                  className="w-full bg-emerald-700 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar configuración'}
+                </button>
               </div>
             </div>
 
           </div>
         </div>
       </div>
+
+      {/* Mobile bottom nav */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-30 safe-area-pb">
+        <div className="flex items-center justify-around px-2 py-2">
+          {navItems.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => setMobileNav(item.key)}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${mobileNav === item.key ? 'text-emerald-700' : 'text-gray-400'}`}
+            >
+              <span className="text-xl leading-none">{item.icon}</span>
+              <span className="text-xs font-medium">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {/* FAB mobile */}
+      <button className="lg:hidden fixed bottom-20 right-4 w-12 h-12 bg-emerald-700 text-white rounded-full shadow-lg flex items-center justify-center text-xl z-20 hover:bg-emerald-600 transition-colors">
+        +
+      </button>
+
     </div>
   )
 }
