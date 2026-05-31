@@ -57,10 +57,10 @@ export default function Dashboard() {
   }
 
   const kpis = [
-    { label: 'Conversaciones', value: stats.totalConversations.toLocaleString(), delta: '+12%', icon: '💬', sub: 'vs mes anterior' },
-    { label: 'Activas ahora', value: stats.activeConversations.toString(), delta: '+8%', icon: '⚡', sub: 'en este momento' },
-    { label: 'Mensajes', value: stats.totalMessages >= 1000 ? (stats.totalMessages/1000).toFixed(1)+'k' : stats.totalMessages.toString(), delta: '+24%', icon: '📨', sub: 'procesados por IA' },
-    { label: 'Resolución IA', value: stats.botHandledRate + '%', delta: '+2%', icon: '✅', sub: 'sin intervención' },
+    { label: 'Conversaciones', value: stats.totalConversations.toLocaleString(), delta: '+12%', icon: '', sub: 'vs mes anterior' },
+    { label: 'Activas ahora', value: stats.activeConversations.toString(), delta: '+8%', icon: '', sub: 'en este momento' },
+    { label: 'Mensajes', value: stats.totalMessages >= 1000 ? (stats.totalMessages/1000).toFixed(1)+'k' : stats.totalMessages.toString(), delta: '+24%', icon: '', sub: 'procesados por IA' },
+    { label: 'Resolución IA', value: stats.botHandledRate + '%', delta: '+2%', icon: '', sub: 'sin intervención' },
     { label: 'Tiempo ahorrado', value: '18h', delta: '+5%', icon: '⏱', sub: 'esta semana' },
   ]
 
