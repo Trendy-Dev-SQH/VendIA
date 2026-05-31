@@ -1,453 +1,268 @@
-'use client'
-import { useUser } from '@clerk/nextjs'
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import Link from 'next/link'
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-
-export default function Dashboard() {
-  const { user } = useUser()
-  const [businessId, setBusinessId] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [mobileNav, setMobileNav] = useState('inicio')
-  const [isTyping, setIsTyping] = useState(false)
-  const [chatInput, setChatInput] = useState('')
-  const [stats, setStats] = useState({ totalConversations: 1284, activeConversations: 42, totalMessages: 8500, botHandledRate: 94 })
-  const [config, setConfig] = useState({ botName: '', businessContext: '', catalog: '', faq: '' })
-
-  useEffect(() => {
-    if (!user) { window.location.href = '/sign-in'; return }
-    initBusiness()
-  }, [user])
-
-  useEffect(() => {
-    const t = setInterval(() => setIsTyping(p => !p), 3000)
-    return () => clearInterval(t)
-  }, [])
-
-  async function initBusiness() {
-    try {
-      let res
-      try {
-        res = await axios.post(API + '/api/business', {
-          name: user?.fullName || 'Mi Negocio',
-          ownerEmail: user?.primaryEmailAddress?.emailAddress,
-          ownerName: user?.fullName || 'Dueño',
-        })
-      } catch {
-        res = await axios.get(API + '/api/business/email/' + user?.primaryEmailAddress?.emailAddress)
-      }
-      setBusinessId(res.data.id)
-      if (res.data.botConfig) setConfig({ botName: res.data.botConfig.botName || '', businessContext: res.data.botConfig.businessContext || '', catalog: res.data.botConfig.catalog || '', faq: res.data.botConfig.faq || '' })
-      const s = await axios.get(API + '/api/business/' + res.data.id + '/stats')
-      setStats(s.data)
-    } catch (err) { console.error(err) }
-  }
-
-  async function saveConfig() {
-    if (!businessId) return
-    setSaving(true)
-    try {
-      await axios.put(API + '/api/business/' + businessId + '/bot-config', config)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
-    } catch (err) { console.error(err) }
-    setSaving(false)
-  }
-
-  const kpis = [
-    { label: 'Conversaciones', value: stats.totalConversations.toLocaleString(), delta: '+12%', icon: '💬', sub: 'vs mes anterior' },
-    { label: 'Activas ahora', value: stats.activeConversations.toString(), delta: '+8%', icon: '⚡', sub: 'en este momento' },
-    { label: 'Mensajes', value: stats.totalMessages >= 1000 ? (stats.totalMessages/1000).toFixed(1)+'k' : stats.totalMessages.toString(), delta: '+24%', icon: '📨', sub: 'procesados por IA' },
-    { label: 'Resolución IA', value: stats.botHandledRate + '%', delta: '+2%', icon: '✅', sub: 'sin intervención' },
-    { label: 'Tiempo ahorrado', value: '18h', delta: '+5%', icon: '⏱', sub: 'esta semana' },
-  ]
-
-  const chartBars = [
-    { h: 30, v: 124 }, { h: 45, v: 189 }, { h: 35, v: 156 },
-    { h: 90, v: 312 }, { h: 55, v: 210 }, { h: 40, v: 168 }, { h: 25, v: 98 }
-  ]
-  const days = ['L','M','X','J','V','S','D']
-  const [hoveredBar, setHoveredBar] = useState<number | null>(null)
-
-  const chats = [
-    { name: 'Marco Polo', msg: 'Interesado en integración con CRM...', time: '12 min', initial: 'M', status: 'ia', tag: 'Ventas' },
-    { name: 'Elena Gómez', msg: 'Cita programada para mañana.', time: '1 hr', initial: 'E', status: 'human', tag: 'Soporte' },
-    { name: 'Carlos Ruiz', msg: 'Pregunta sobre precios del plan Pro', time: '2 hr', initial: 'C', status: 'pending', tag: 'Planes' },
-  ]
-
-  const statusMap: Record<string, { label: string; color: string; dot: string }> = {
-    ia: { label: 'IA', color: 'text-emerald-400', dot: 'bg-emerald-400' },
-    human: { label: 'Humano', color: 'text-red-400', dot: 'bg-red-400' },
-    pending: { label: 'Pendiente', color: 'text-yellow-400', dot: 'bg-yellow-400' },
-  }
-
-  const timeline = [
-    { time: '10:27', text: 'Cliente solicitó información sobre planes', sub: '"Hola, ¿cuáles son sus precios?"', color: 'bg-blue-500' },
-    { time: '10:24', text: 'IA respondió exitosamente', sub: 'Categorizado: Ventas', color: 'bg-emerald-500' },
-    { time: '10:20', text: 'Pedido confirmado por el cliente', sub: 'Zapatillas Nike · $180.000', color: 'bg-emerald-500' },
-    { time: '10:15', text: 'Sesión iniciada: Carlos Ruiz', sub: 'Canal WhatsApp Business', color: 'bg-gray-500' },
-  ]
-
-  const navItems = [
-    { key: 'inicio', icon: '⊞', label: 'Inicio' },
-    { key: 'chats', icon: '💬', label: 'Chats' },
-    { key: 'clientes', icon: '👥', label: 'Clientes' },
-    { key: 'ajustes', icon: '⚙', label: 'Ajustes' },
-  ]
-
+export default function Home() {
   return (
-    <div style={{background:'#0B1220'}} className="min-h-screen w-full font-sans text-white">
+    <main style={{background:'#05070B',color:'#FFFFFF',fontFamily:'Inter,sans-serif',minHeight:'100vh',overflowX:'hidden'}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .card { background: #111827; border: 1px solid #243145; border-radius: 14px; }
-        .dot-pulse span { display:inline-block; width:6px; height:6px; border-radius:50%; background:#22C55E; margin:0 2px; animation: dotpulse 1.4s infinite; }
-        .dot-pulse span:nth-child(2){animation-delay:0.2s}
-        .dot-pulse span:nth-child(3){animation-delay:0.4s}
-        @keyframes dotpulse { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
-        .bar-tooltip { display:none; position:absolute; bottom:105%; left:50%; transform:translateX(-50%); background:#1E293B; color:#F8FAFC; font-size:10px; font-weight:600; padding:4px 8px; border-radius:6px; white-space:nowrap; border:1px solid #243145; z-index:10; pointer-events:none; }
-        .bar-wrap:hover .bar-tooltip { display:block; }
+        *{box-sizing:border-box;margin:0;padding:0}
+        .card{background:#0D1117;border:1px solid #1F2937;border-radius:16px}
+        .btn-primary{background:#0B6B4B;color:#fff;border:none;cursor:pointer;font-weight:600;transition:all 0.2s}
+        .btn-primary:hover{background:#0d7d58}
+        .accent{color:#22C55E}
+        .muted{color:#94A3B8}
+        .faq-item summary{cursor:pointer;list-style:none;padding:16px 0;display:flex;justify-content:space-between;align-items:center;font-weight:500;border-bottom:1px solid #1F2937}
+        .faq-item summary::-webkit-details-marker{display:none}
+        .faq-item[open] summary{color:#22C55E}
+        .faq-item p{padding:12px 0 16px;color:#94A3B8;font-size:14px;line-height:1.6;border-bottom:1px solid #1F2937}
+        .phone-mockup{background:linear-gradient(135deg,#0D1117,#111827);border:2px solid #1F2937;border-radius:36px;padding:12px;box-shadow:0 40px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(34,197,94,0.1);position:relative;overflow:hidden}
+        .phone-screen{background:#05070B;border-radius:26px;padding:16px;min-height:320px;position:relative}
+        .metric-card{background:#0D1117;border:1px solid #1F2937;border-radius:12px;padding:16px 20px;flex:1;min-width:0}
+        .step-num{width:32px;height:32px;border-radius:50%;background:rgba(11,107,75,0.15);border:1px solid rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;color:#22C55E;font-weight:700;font-size:14px;flex-shrink:0}
+        .tag{background:rgba(255,255,255,0.06);border:1px solid #1F2937;border-radius:100px;padding:8px 16px;font-size:13px;color:#94A3B8;display:inline-flex;align-items:center;gap:6px}
+        .compare-col{background:#0D1117;border:1px solid #1F2937;border-radius:16px;padding:24px;flex:1;min-width:0}
+        .compare-col.good{border-color:rgba(34,197,94,0.3);background:rgba(11,107,75,0.06)}
+        .test-card{background:#0D1117;border:1px solid #1F2937;border-radius:14px;padding:20px}
+        @media(max-width:768px){.hero-grid{grid-template-columns:1fr!important}.hide-mobile{display:none!important}.compare-flex{flex-direction:column!important}}
       `}</style>
 
-      <div className="flex w-full">
-
-        {/* Sidebar desktop */}
-        <aside className="hidden lg:flex flex-col w-56 xl:w-60 fixed top-0 left-0 min-h-screen z-30" style={{background:'#0D1526',borderRight:'1px solid #1E2D42'}}>
-          <div className="px-5 py-5" style={{borderBottom:'1px solid #1E2D42'}}>
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{background:'#0B6B4B'}}>V</div>
-              <div>
-                <p className="text-sm font-bold" style={{color:'#F8FAFC'}}>VendIA</p>
-                <p className="text-xs" style={{color:'#64748B'}}>SaaS de Automatización</p>
-              </div>
-            </div>
+      {/* Navbar */}
+      <nav style={{position:'sticky',top:0,zIndex:50,background:'rgba(5,7,11,0.95)',backdropFilter:'blur(12px)',borderBottom:'1px solid #1F2937',padding:'0 24px'}}>
+        <div style={{maxWidth:1120,margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',height:60}}>
+          <div style={{fontWeight:800,fontSize:20,letterSpacing:'-0.02em'}}>Vend<span className="accent">IA</span></div>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <Link href="/sign-in" style={{color:'#94A3B8',textDecoration:'none',fontSize:14,fontWeight:500}}>Iniciar sesión</Link>
+            <Link href="/sign-up" className="btn-primary" style={{padding:'8px 20px',borderRadius:100,fontSize:14,textDecoration:'none',display:'inline-block'}}>Empezar gratis</Link>
           </div>
-          <nav className="flex-1 px-3 py-4 space-y-0.5">
-            {[
-              { icon: '⊞', label: 'Dashboard', active: true },
-              { icon: '≡', label: 'Conversaciones' },
-              { icon: '📖', label: 'Base de Conocimiento' },
-              { icon: '👥', label: 'Clientes' },
-              { icon: '⚙', label: 'Configuración' },
-            ].map((item) => (
-              <button key={item.label} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all" style={item.active ? {background:'rgba(11,107,75,0.15)',color:'#22C55E',fontWeight:600} : {color:'#94A3B8'}}>
-                <span>{item.icon}</span>
-                <span className="truncate">{item.label}</span>
-              </button>
-            ))}
-          </nav>
-          <div className="px-3 pb-5 space-y-2">
-            <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all" style={{background:'#0B6B4B',color:'white'}}>
-              + Conectar WhatsApp
-            </button>
-            <div className="flex items-center gap-2 px-2 py-1.5">
-              <span className="w-2 h-2 rounded-full animate-pulse" style={{background:'#22C55E'}}></span>
-              <span className="text-xs" style={{color:'#64748B'}}>Estado de Conexión</span>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main */}
-        <div className="w-full lg:ml-56 xl:ml-60 flex flex-col min-h-screen">
-
-          {/* Mobile topbar */}
-          <header className="lg:hidden px-4 py-3 flex items-center justify-between sticky top-0 z-20" style={{background:'#0D1526',borderBottom:'1px solid #1E2D42'}}>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-md flex items-center justify-center text-white text-xs font-bold" style={{background:'#0B6B4B'}}>V</div>
-              <span className="font-bold text-sm" style={{color:'#F8FAFC'}}>VendIA</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🔔</span>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{background:'rgba(11,107,75,0.2)',color:'#22C55E'}}>
-                {user?.firstName?.[0] || 'U'}
-              </div>
-            </div>
-          </header>
-
-          {/* Desktop topbar */}
-          <header className="hidden lg:flex px-6 xl:px-8 py-4 items-center justify-between sticky top-0 z-20" style={{background:'#0D1526',borderBottom:'1px solid #1E2D42'}}>
-            <div>
-              <h1 className="text-lg font-bold" style={{color:'#F8FAFC'}}>Dashboard</h1>
-              <p className="text-xs" style={{color:'#64748B'}}>Resumen de la actividad de tu asistente</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.2)',color:'#22C55E'}}>
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:'#22C55E'}}></span>IA Online
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{background:'rgba(255,255,255,0.05)',border:'1px solid #243145',color:'#94A3B8'}}>
-                ⚡ WhatsApp Activo
-              </span>
-              <span className="text-xs px-2.5 py-1 rounded-full" style={{background:'rgba(255,255,255,0.05)',border:'1px solid #243145',color:'#64748B'}}>
-                Sync: hace 2min
-              </span>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg transition-all" style={{color:'#64748B'}}>🔔</button>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{background:'rgba(11,107,75,0.2)',color:'#22C55E'}}>
-                {user?.firstName?.[0] || 'U'}
-              </div>
-            </div>
-          </header>
-
-          {/* Content */}
-          <div className="flex-1 px-4 md:px-6 xl:px-8 py-5 pb-24 lg:pb-8 space-y-4 w-full max-w-6xl mx-auto">
-
-            {/* Mobile header */}
-            <div className="lg:hidden">
-              <h1 className="text-2xl font-black tracking-tight mb-3" style={{color:'#F8FAFC'}}>Dashboard</h1>
-              <div className="flex gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full" style={{background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.2)',color:'#22C55E'}}>
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:'#22C55E'}}></span>IA Online
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full" style={{background:'rgba(255,255,255,0.05)',border:'1px solid #243145',color:'#94A3B8'}}>
-                  ⚡ WhatsApp Activo
-                </span>
-              </div>
-            </div>
-
-            {/* KPIs */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              {kpis.map((kpi, i) => (
-                <div key={i} className="card p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-base">{kpi.icon}</span>
-                    <span className="text-xs font-semibold" style={{color:'#22C55E'}}>↑ {kpi.delta}</span>
-                  </div>
-                  <p className="text-xs font-medium mb-1 uppercase tracking-wider" style={{color:'#64748B'}}>{kpi.label}</p>
-                  <p className="text-2xl font-black tracking-tight" style={{color:'#F8FAFC'}}>{kpi.value}</p>
-                  <p className="text-xs mt-1" style={{color:'#475569'}}>{kpi.sub}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Chart + AI Brain */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="card p-5 lg:col-span-2">
-                <div className="flex items-center justify-between mb-5">
-                  <div>
-                    <p className="text-sm font-semibold" style={{color:'#F8FAFC'}}>Actividad Semanal</p>
-                    <p className="text-xs mt-0.5" style={{color:'#64748B'}}>Mensajes gestionados por la IA</p>
-                  </div>
-                  <span className="text-xs px-2.5 py-1 rounded-lg" style={{background:'rgba(255,255,255,0.05)',border:'1px solid #243145',color:'#94A3B8'}}>Últimos 7 días</span>
-                </div>
-                <div className="flex items-end gap-1.5 h-28 w-full">
-                  {chartBars.map((bar, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1 min-w-0 relative bar-wrap" onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)}>
-                      <div className="bar-tooltip">{bar.v} msgs</div>
-                      <div
-                        className="w-full rounded-md transition-all duration-200"
-                        style={{
-                          height: `${bar.h}%`,
-                          background: i === 3 || hoveredBar === i ? '#0B6B4B' : 'rgba(34,197,94,0.15)',
-                          border: hoveredBar === i ? '1px solid #22C55E' : '1px solid transparent',
-                        }}
-                      ></div>
-                      <span className="text-xs" style={{color:'#475569'}}>{days[i]}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* AI Brain */}
-              <div className="card p-5 flex flex-col" style={{background:'#0D1F2D',borderColor:'rgba(11,107,75,0.3)'}}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{background:'rgba(11,107,75,0.2)',border:'1px solid rgba(11,107,75,0.4)'}}>🧠</div>
-                  <div>
-                    <p className="text-sm font-bold" style={{color:'#F8FAFC'}}>Cerebro de la IA</p>
-                    <p className="text-xs" style={{color:'#22C55E'}}>98.2% de precisión</p>
-                  </div>
-                </div>
-                <p className="text-sm leading-relaxed mb-4 flex-1" style={{color:'#94A3B8'}}>
-                  La IA ha optimizado 4 flujos de venta hoy sin requerir intervención manual.
-                </p>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {[{v:'24',l:'FAQs'},{v:'142',l:'Productos'},{v:'24/7',l:'Horario'}].map((item,i)=>(
-                    <div key={i} className="text-center p-2 rounded-lg" style={{background:'rgba(255,255,255,0.04)',border:'1px solid #243145'}}>
-                      <p className="text-sm font-bold" style={{color:'#22C55E'}}>{item.v}</p>
-                      <p className="text-xs" style={{color:'#64748B'}}>{item.l}</p>
-                    </div>
-                  ))}
-                </div>
-                <button className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all" style={{background:'rgba(11,107,75,0.15)',border:'1px solid rgba(11,107,75,0.4)',color:'#22C55E'}}>
-                  Administrar conocimiento
-                </button>
-              </div>
-            </div>
-
-            {/* Chat simulator */}
-            <div className="card overflow-hidden">
-              <div className="px-5 pt-4 pb-3" style={{borderBottom:'1px solid #1E2D42'}}>
-                <p className="text-sm font-semibold" style={{color:'#F8FAFC'}}>Simulador de Chat</p>
-                <p className="text-xs mt-0.5" style={{color:'#64748B'}}>Prueba cómo responde tu IA</p>
-              </div>
-              <div className="px-5 py-4">
-                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-4" style={{background:'#0B6B4B'}}>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{background:'rgba(255,255,255,0.2)'}}>👤</div>
-                  <span className="text-sm font-medium text-white">Cliente Potencial</span>
-                  <span className="ml-auto w-2 h-2 rounded-full animate-pulse" style={{background:'#86EFAC'}}></span>
-                </div>
-                <div className="space-y-3 min-h-28 mb-4">
-                  <div className="max-w-xs">
-                    <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm" style={{background:'rgba(255,255,255,0.07)',border:'1px solid #243145'}}>
-                      <p className="text-sm" style={{color:'#E2E8F0'}}>¿Qué precio tiene el plan SaaS avanzado?</p>
-                    </div>
-                    <p className="text-xs mt-1 ml-1" style={{color:'#475569'}}>09:41</p>
-                  </div>
-                  <div className="flex justify-end">
-                    <div className="max-w-xs">
-                      <div className="px-4 py-2.5 rounded-2xl rounded-tr-sm" style={{background:'#0B6B4B'}}>
-                        <p className="text-sm text-white">El plan Avanzado cuesta $49/mes. Incluye IA ilimitada y 5 canales.</p>
-                        <p className="text-xs text-right mt-1" style={{color:'#86EFAC'}}>VendIA · 09:42 ✓✓</p>
-                      </div>
-                    </div>
-                  </div>
-                  {isTyping && (
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0" style={{background:'rgba(11,107,75,0.2)'}}>🤖</div>
-                      <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm" style={{background:'rgba(255,255,255,0.07)',border:'1px solid #243145'}}>
-                        <div className="dot-pulse flex items-center h-4">
-                          <span></span><span></span><span></span>
-                        </div>
-                      </div>
-                      <span className="text-xs" style={{color:'#64748B'}}>IA respondiendo...</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl" style={{background:'rgba(255,255,255,0.04)',border:'1px solid #243145'}}>
-                  <input
-                    className="flex-1 text-sm bg-transparent focus:outline-none min-w-0"
-                    style={{color:'#94A3B8'}}
-                    placeholder="Probar respuesta de la IA..."
-                    value={chatInput}
-                    onChange={e => setChatInput(e.target.value)}
-                  />
-                  <button className="w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all flex-shrink-0" style={{background:'#0B6B4B',color:'white'}}>▷</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Chats recientes */}
-            <div className="card p-5">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-semibold" style={{color:'#F8FAFC'}}>Chats Recientes</p>
-                <button className="text-xs font-medium transition-all" style={{color:'#22C55E'}}>Ver todos →</button>
-              </div>
-              <div className="space-y-2">
-                {chats.map((chat, i) => {
-                  const st = statusMap[chat.status]
-                  return (
-                    <div key={i} className="flex items-center gap-3 py-3 px-3 rounded-xl transition-all" style={{border:'1px solid transparent'}}>
-                      <div className="relative flex-shrink-0">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{background:'rgba(11,107,75,0.15)',color:'#22C55E'}}>{chat.initial}</div>
-                        <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 ${st.dot}`} style={{borderColor:'#111827'}}></span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-sm font-semibold truncate" style={{color:'#F8FAFC'}}>{chat.name}</p>
-                          <span className={`text-xs font-medium flex-shrink-0 ${st.color}`}>● {st.label}</span>
-                        </div>
-                        <p className="text-xs truncate" style={{color:'#64748B'}}>{chat.msg}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                        <span className="text-xs" style={{color:'#475569'}}>{chat.time}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{background:'rgba(255,255,255,0.06)',color:'#94A3B8'}}>{chat.tag}</span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Timeline */}
-            <div className="card p-5">
-              <p className="text-sm font-semibold mb-4" style={{color:'#F8FAFC'}}>Actividad en tiempo real</p>
-              <div className="space-y-0">
-                {timeline.map((item, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${item.color}`}></div>
-                      {i < timeline.length - 1 && <div className="w-px flex-1 my-1" style={{background:'#1E2D42'}}></div>}
-                    </div>
-                    <div className="pb-4 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-mono font-semibold" style={{color:'#22C55E'}}>{item.time}</span>
-                        <span className="text-sm font-medium" style={{color:'#E2E8F0'}}>{item.text}</span>
-                      </div>
-                      <p className="text-xs mt-0.5" style={{color:'#475569'}}>{item.sub}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bot config */}
-            <div className="card p-5">
-              <p className="text-sm font-semibold mb-4" style={{color:'#F8FAFC'}}>Configuración del Bot</p>
-              <div className="space-y-3">
-                {[
-                  { label: 'Nombre del bot', key: 'botName', placeholder: 'Ej: Asistente VendIA', multiline: false },
-                  { label: 'Descripción del negocio', key: 'businessContext', placeholder: 'Describe tu negocio...', multiline: true },
-                  { label: 'Catálogo', key: 'catalog', placeholder: 'Lista tus productos o servicios...', multiline: true },
-                  { label: 'Preguntas frecuentes', key: 'faq', placeholder: '¿Cuáles son sus horarios?...', multiline: true },
-                ].map((field) => (
-                  <div key={field.key}>
-                    <label className="text-xs font-medium block mb-1.5" style={{color:'#64748B'}}>{field.label}</label>
-                    {field.multiline ? (
-                      <textarea
-                        className="w-full px-3 py-2.5 rounded-lg text-sm focus:outline-none h-20 resize-none transition-all"
-                        style={{background:'rgba(255,255,255,0.04)',border:'1px solid #243145',color:'#E2E8F0'}}
-                        placeholder={field.placeholder}
-                        value={config[field.key as keyof typeof config]}
-                        onChange={e => setConfig({...config, [field.key]: e.target.value})}
-                      />
-                    ) : (
-                      <input
-                        className="w-full px-3 py-2.5 rounded-lg text-sm focus:outline-none transition-all"
-                        style={{background:'rgba(255,255,255,0.04)',border:'1px solid #243145',color:'#E2E8F0'}}
-                        placeholder={field.placeholder}
-                        value={config[field.key as keyof typeof config]}
-                        onChange={e => setConfig({...config, [field.key]: e.target.value})}
-                      />
-                    )}
-                  </div>
-                ))}
-                <button
-                  onClick={saveConfig}
-                  disabled={saving}
-                  className="w-full py-3 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
-                  style={{background:'#0B6B4B',color:'white'}}
-                >
-                  {saving ? 'Guardando...' : saved ? '✓ Guardado correctamente' : 'Guardar configuración'}
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30" style={{background:'#0D1526',borderTop:'1px solid #1E2D42'}}>
-        <div className="flex items-center justify-around px-2 py-2">
-          {navItems.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => setMobileNav(item.key)}
-              className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all"
-              style={mobileNav === item.key ? {color:'#22C55E'} : {color:'#475569'}}
-            >
-              <span className="text-xl leading-none">{item.icon}</span>
-              <span className="text-xs font-medium">{item.label}</span>
-            </button>
-          ))}
         </div>
       </nav>
 
-      {/* FAB mobile */}
-      <button className="lg:hidden fixed bottom-20 right-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-xl z-20 transition-all" style={{background:'#0B6B4B',color:'white'}}>
-        +
-      </button>
+      {/* Hero */}
+      <section style={{padding:'80px 24px 60px',maxWidth:1120,margin:'0 auto'}}>
+        <div className="hero-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:48,alignItems:'center'}}>
+          <div>
+            <div style={{display:'inline-flex',alignItems:'center',gap:8,background:'rgba(34,197,94,0.08)',border:'1px solid rgba(34,197,94,0.2)',borderRadius:100,padding:'6px 14px',marginBottom:24}}>
+              <span style={{width:6,height:6,borderRadius:'50%',background:'#22C55E',display:'inline-block',animation:'pulse 2s infinite'}}></span>
+              <span style={{fontSize:12,color:'#22C55E',fontWeight:600}}>PROCESO AUTOMÁTICO</span>
+            </div>
+            <h1 style={{fontSize:'clamp(2rem,5vw,3.5rem)',fontWeight:900,lineHeight:1.05,letterSpacing:'-0.03em',marginBottom:20}}>
+              Tu negocio responde WhatsApp incluso cuando estás ocupado
+            </h1>
+            <p style={{fontSize:16,color:'#94A3B8',lineHeight:1.7,marginBottom:32,maxWidth:420}}>
+              Automatiza la atención y vende 24/7 sin tocar el teléfono. Inteligencia artificial diseñada para negocios locales.
+            </p>
+            <div style={{display:'flex',flexDirection:'column',gap:12,alignItems:'flex-start'}}>
+              <Link href="/sign-up" className="btn-primary" style={{padding:'14px 28px',borderRadius:12,fontSize:16,textDecoration:'none',display:'inline-block'}}>Empezar gratis</Link>
+              <p style={{fontSize:12,color:'#475569'}}>No requiere tarjeta de crédito</p>
+            </div>
+          </div>
 
-    </div>
+          {/* Phone mockup */}
+          <div style={{display:'flex',justifyContent:'center'}}>
+            <div className="phone-mockup" style={{width:'100%',maxWidth:280}}>
+              <div className="phone-screen">
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,paddingBottom:12,borderBottom:'1px solid #1F2937'}}>
+                  <div style={{width:32,height:32,borderRadius:'50%',background:'rgba(11,107,75,0.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🤖</div>
+                  <div>
+                    <p style={{fontSize:12,fontWeight:600,color:'#F8FAFC'}}>VendIA Bot</p>
+                    <p style={{fontSize:10,color:'#22C55E'}}>● En línea</p>
+                  </div>
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                  <div style={{background:'#1F2937',borderRadius:'12px 12px 12px 4px',padding:'10px 14px',maxWidth:'85%'}}>
+                    <p style={{fontSize:12,color:'#E2E8F0',lineHeight:1.5}}>¡Hola! ¿En qué te puedo ayudar hoy? 😊</p>
+                  </div>
+                  <div style={{display:'flex',justifyContent:'flex-end'}}>
+                    <div style={{background:'#0B6B4B',borderRadius:'12px 12px 4px 12px',padding:'10px 14px',maxWidth:'85%'}}>
+                      <p style={{fontSize:12,color:'#fff',lineHeight:1.5}}>¿Tienen stock del modelo Pro?</p>
+                    </div>
+                  </div>
+                  <div style={{background:'#1F2937',borderRadius:'12px 12px 12px 4px',padding:'10px 14px',maxWidth:'85%'}}>
+                    <p style={{fontSize:12,color:'#E2E8F0',lineHeight:1.5}}>¡Sí! Tenemos 5 unidades. ¿Te lo reservo? 🎉</p>
+                    <p style={{fontSize:10,color:'#22C55E',textAlign:'right',marginTop:4}}>✓✓ 10:42</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Metrics */}
+      <section style={{padding:'0 24px 64px',maxWidth:1120,margin:'0 auto'}}>
+        <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+          {[
+            { v:'+85%', l:'Más ventas' },
+            { v:'+60%', l:'Clientes bien atendidos' },
+            { v:'24/7', l:'Atención automática' },
+          ].map((m,i) => (
+            <div key={i} className="metric-card">
+              <p style={{fontSize:28,fontWeight:900,color:'#22C55E',letterSpacing:'-0.02em'}}>{m.v}</p>
+              <p style={{fontSize:12,color:'#64748B',marginTop:4}}>{m.l}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Cómo funciona */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:40}}>Cómo funciona</h2>
+        <div style={{display:'flex',flexDirection:'column',gap:24}}>
+          {[
+            { n:'1', t:'Configura', d:'Escanea tu código QR, conecta WhatsApp y carga el catálogo de ventas.' },
+            { n:'2', t:'Entrena', d:'Sube tus datos, estadísticas y preguntas. La IA aprende todo sobre tu negocio.' },
+            { n:'3', t:'Conecta', d:'Conecta todo con un par de clics de registro y actualiza información al momento.' },
+            { n:'4', t:'VendIA responde', d:'Tu asistente empieza a vender y atender clientes 24/7 de forma automática.' },
+          ].map((step, i) => (
+            <div key={i} style={{display:'flex',gap:16,alignItems:'flex-start'}}>
+              <div className="step-num">{step.n}</div>
+              <div>
+                <p style={{fontWeight:700,fontSize:16,marginBottom:6}}>{step.t}</p>
+                <p style={{fontSize:14,color:'#94A3B8',lineHeight:1.6}}>{step.d}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Centro de Mando */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:12}}>El Centro de Mando</h2>
+        <p style={{color:'#94A3B8',marginBottom:32,fontSize:15}}>Ten el control de tu negocio en una interfaz diseñada para la efectividad.</p>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16}}>
+          <div className="card" style={{padding:24}}>
+            <div style={{width:40,height:40,background:'rgba(34,197,94,0.1)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,marginBottom:16}}>📊</div>
+            <p style={{fontWeight:700,fontSize:16,marginBottom:8}}>Dashboard de Ventas</p>
+            <p style={{fontSize:13,color:'#94A3B8',lineHeight:1.6}}>Visualiza ideas y métricas en tiempo real con gráficas de alto impacto.</p>
+          </div>
+          <div className="card" style={{padding:24}}>
+            <div style={{width:40,height:40,background:'rgba(34,197,94,0.1)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,marginBottom:16}}>🧠</div>
+            <p style={{fontWeight:700,fontSize:16,marginBottom:8}}>Base de Conocimientos</p>
+            <p style={{fontSize:13,color:'#94A3B8',lineHeight:1.6}}>Carga tu catálogo, preguntas y respuestas para optimizar todo tu equipo.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Diseñado para ti */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:32}}>Diseñado para ti</h2>
+        <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
+          {[
+            {icon:'☕',l:'Cafeterías'},{icon:'✂️',l:'Estéticas'},{icon:'🏪',l:'Tiendas Locales'},
+            {icon:'🏥',l:'Consultorios'},{icon:'🛠',l:'Servicios'},{icon:'➕',l:'Más'},
+          ].map((cat,i) => (
+            <span key={i} className="tag">{cat.icon} {cat.l}</span>
+          ))}
+        </div>
+      </section>
+
+      {/* Antes vs Después */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:32}}>El cambio es real</h2>
+        <div className="compare-flex" style={{display:'flex',gap:16}}>
+          <div className="compare-col">
+            <p style={{fontWeight:700,marginBottom:16,color:'#EF4444'}}>✕ Sin VendIA</p>
+            {['Mensajes ignorados por horas','Pérdida de clientes por falta de respuesta','Consultas en madrugadas sin atender','Solo mensajes en horario diurno'].map((t,i)=>(
+              <div key={i} style={{display:'flex',gap:10,marginBottom:10}}>
+                <span style={{color:'#EF4444',flexShrink:0}}>✕</span>
+                <p style={{fontSize:13,color:'#94A3B8'}}>{t}</p>
+              </div>
+            ))}
+          </div>
+          <div className="compare-col good">
+            <p style={{fontWeight:700,marginBottom:16,color:'#22C55E'}}>✓ Con VendIA</p>
+            {['Respuestas en menos de 1 segundo','Ventas cerradas mientras duermes','Claro mensajes sin confusiones','Siempre disponible'].map((t,i)=>(
+              <div key={i} style={{display:'flex',gap:10,marginBottom:10}}>
+                <span style={{color:'#22C55E',flexShrink:0}}>✓</span>
+                <p style={{fontSize:13,color:'#94A3B8'}}>{t}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonios */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:32}}>Lo que dicen</h2>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16}}>
+          {[
+            { q:'"VendIA cambió mi negocio. Ahora los clientes dicen que les han llegado de inmediato sin que el día sea un solo por el app."', name:'Ana Martínez', role:'Tienda local' },
+            { q:'"Recuperé más de 3hrs de jornada. La IA maneja dudas de precios y atención al cliente cuando yo no puedo."', name:'Carlos Wall', role:'Consultor' },
+          ].map((t,i)=>(
+            <div key={i} className="test-card">
+              <p style={{fontSize:14,color:'#94A3B8',lineHeight:1.7,marginBottom:16}}>{t.q}</p>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:32,height:32,borderRadius:'50%',background:'rgba(11,107,75,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,color:'#22C55E',fontWeight:700}}>{t.name[0]}</div>
+                <div>
+                  <p style={{fontSize:13,fontWeight:600}}>{t.name}</p>
+                  <p style={{fontSize:12,color:'#64748B'}}>{t.role}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section style={{padding:'64px 24px',maxWidth:720,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:32}}>Preguntas frecuentes</h2>
+        {[
+          { q:'¿Cómo puedo suscribirme?', a:'Solo crea una cuenta, conecta tu WhatsApp Business y configura tu bot en menos de 10 minutos.' },
+          { q:'¿Funciona con WhatsApp normal?', a:'VendIA funciona con WhatsApp Business API. Te guiamos en todo el proceso de configuración.' },
+          { q:'¿Puedo interactuar de forma manual?', a:'Sí, puedes tomar control de cualquier conversación en cualquier momento desde el dashboard.' },
+        ].map((faq,i)=>(
+          <details key={i} className="faq-item">
+            <summary>
+              <span>{faq.q}</span>
+              <span style={{color:'#64748B',fontSize:18}}>+</span>
+            </summary>
+            <p>{faq.a}</p>
+          </details>
+        ))}
+      </section>
+
+      {/* CTA final */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <div style={{background:'linear-gradient(135deg,#0B1F15,#071811)',border:'1px solid rgba(34,197,94,0.2)',borderRadius:24,padding:'60px 32px',textAlign:'center'}}>
+          <h2 style={{fontSize:'clamp(1.75rem,5vw,3rem)',fontWeight:900,letterSpacing:'-0.03em',marginBottom:16}}>
+            ¿Listo para automatizar WhatsApp?
+          </h2>
+          <p style={{color:'#94A3B8',fontSize:16,marginBottom:32,maxWidth:400,margin:'0 auto 32px'}}>
+            Únete a los negocios que ya están escalando sin esfuerzo.
+          </p>
+          <Link href="/sign-up" className="btn-primary" style={{padding:'16px 36px',borderRadius:12,fontSize:16,textDecoration:'none',display:'inline-block',fontWeight:700}}>
+            Registrar acceso
+          </Link>
+          <p style={{fontSize:12,color:'#475569',marginTop:12}}>Instalación guiada en 5 minutos</p>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={{borderTop:'1px solid #1F2937',padding:'40px 24px'}}>
+        <div style={{maxWidth:1120,margin:'0 auto',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:32}}>
+          <div>
+            <div style={{fontWeight:800,fontSize:18,marginBottom:12}}>Vend<span className="accent">IA</span></div>
+            <p style={{fontSize:13,color:'#64748B',lineHeight:1.6}}>Automatización inteligente para negocios locales.</p>
+          </div>
+          {[
+            { title:'Producto', links:['Funciones','Precios','FAQ','Changelog'] },
+            { title:'Compañía', links:['Acerca de','Blog','Términos','Privacidad'] },
+            { title:'Soporte', links:['Documentación','Contacto','WhatsApp','Discord'] },
+          ].map((col,i)=>(
+            <div key={i}>
+              <p style={{fontWeight:600,fontSize:13,marginBottom:12}}>{col.title}</p>
+              {col.links.map((l,j)=>(
+                <p key={j} style={{fontSize:13,color:'#64748B',marginBottom:8,cursor:'pointer'}}>{l}</p>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div style={{maxWidth:1120,margin:'32px auto 0',paddingTop:24,borderTop:'1px solid #1F2937',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
+          <p style={{fontSize:12,color:'#475569'}}>© 2026 VendIA · Todos los derechos reservados</p>
+          <p style={{fontSize:12,color:'#475569'}}>Hecho con ❤️ para negocios locales</p>
+        </div>
+      </footer>
+
+    </main>
   )
 }
