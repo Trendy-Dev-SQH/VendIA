@@ -11,18 +11,20 @@ export default function Dashboard() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [mobileNav, setMobileNav] = useState('inicio')
-  const [stats, setStats] = useState({
-    totalConversations: 1284,
-    activeConversations: 42,
-    totalMessages: 8500,
-    botHandledRate: 94,
-  })
+  const [isTyping, setIsTyping] = useState(false)
+  const [chatInput, setChatInput] = useState('')
+  const [stats, setStats] = useState({ totalConversations: 1284, activeConversations: 42, totalMessages: 8500, botHandledRate: 94 })
   const [config, setConfig] = useState({ botName: '', businessContext: '', catalog: '', faq: '' })
 
   useEffect(() => {
     if (!user) { window.location.href = '/sign-in'; return }
     initBusiness()
   }, [user])
+
+  useEffect(() => {
+    const t = setInterval(() => setIsTyping(p => !p), 3000)
+    return () => clearInterval(t)
+  }, [])
 
   async function initBusiness() {
     try {
@@ -37,14 +39,7 @@ export default function Dashboard() {
         res = await axios.get(API + '/api/business/email/' + user?.primaryEmailAddress?.emailAddress)
       }
       setBusinessId(res.data.id)
-      if (res.data.botConfig) {
-        setConfig({
-          botName: res.data.botConfig.botName || '',
-          businessContext: res.data.botConfig.businessContext || '',
-          catalog: res.data.botConfig.catalog || '',
-          faq: res.data.botConfig.faq || '',
-        })
-      }
+      if (res.data.botConfig) setConfig({ botName: res.data.botConfig.botName || '', businessContext: res.data.botConfig.businessContext || '', catalog: res.data.botConfig.catalog || '', faq: res.data.botConfig.faq || '' })
       const s = await axios.get(API + '/api/business/' + res.data.id + '/stats')
       setStats(s.data)
     } catch (err) { console.error(err) }
@@ -62,14 +57,38 @@ export default function Dashboard() {
   }
 
   const kpis = [
-    { label: 'CONVERSACIONES', value: stats.totalConversations.toLocaleString(), delta: '+12%', up: true },
-    { label: 'ACTIVAS', value: stats.activeConversations.toString(), delta: '+8%', up: true },
-    { label: 'MENSAJES', value: stats.totalMessages >= 1000 ? (stats.totalMessages/1000).toFixed(1)+'k' : stats.totalMessages.toString(), delta: '+24%', up: true },
-    { label: 'RESOLUCIÓN', value: stats.botHandledRate + '%', delta: '+2%', up: true },
+    { label: 'Conversaciones', value: stats.totalConversations.toLocaleString(), delta: '+12%', icon: '💬', sub: 'vs mes anterior' },
+    { label: 'Activas ahora', value: stats.activeConversations.toString(), delta: '+8%', icon: '⚡', sub: 'en este momento' },
+    { label: 'Mensajes', value: stats.totalMessages >= 1000 ? (stats.totalMessages/1000).toFixed(1)+'k' : stats.totalMessages.toString(), delta: '+24%', icon: '📨', sub: 'procesados por IA' },
+    { label: 'Resolución IA', value: stats.botHandledRate + '%', delta: '+2%', icon: '✅', sub: 'sin intervención' },
+    { label: 'Tiempo ahorrado', value: '18h', delta: '+5%', icon: '⏱', sub: 'esta semana' },
   ]
 
-  const chartBars = [30, 45, 35, 90, 55, 40, 25]
+  const chartBars = [
+    { h: 30, v: 124 }, { h: 45, v: 189 }, { h: 35, v: 156 },
+    { h: 90, v: 312 }, { h: 55, v: 210 }, { h: 40, v: 168 }, { h: 25, v: 98 }
+  ]
   const days = ['L','M','X','J','V','S','D']
+  const [hoveredBar, setHoveredBar] = useState<number | null>(null)
+
+  const chats = [
+    { name: 'Marco Polo', msg: 'Interesado en integración con CRM...', time: '12 min', initial: 'M', status: 'ia', tag: 'Ventas' },
+    { name: 'Elena Gómez', msg: 'Cita programada para mañana.', time: '1 hr', initial: 'E', status: 'human', tag: 'Soporte' },
+    { name: 'Carlos Ruiz', msg: 'Pregunta sobre precios del plan Pro', time: '2 hr', initial: 'C', status: 'pending', tag: 'Planes' },
+  ]
+
+  const statusMap: Record<string, { label: string; color: string; dot: string }> = {
+    ia: { label: 'IA', color: 'text-emerald-400', dot: 'bg-emerald-400' },
+    human: { label: 'Humano', color: 'text-red-400', dot: 'bg-red-400' },
+    pending: { label: 'Pendiente', color: 'text-yellow-400', dot: 'bg-yellow-400' },
+  }
+
+  const timeline = [
+    { time: '10:27', text: 'Cliente solicitó información sobre planes', sub: '"Hola, ¿cuáles son sus precios?"', color: 'bg-blue-500' },
+    { time: '10:24', text: 'IA respondió exitosamente', sub: 'Categorizado: Ventas', color: 'bg-emerald-500' },
+    { time: '10:20', text: 'Pedido confirmado por el cliente', sub: 'Zapatillas Nike · $180.000', color: 'bg-emerald-500' },
+    { time: '10:15', text: 'Sesión iniciada: Carlos Ruiz', sub: 'Canal WhatsApp Business', color: 'bg-gray-500' },
+  ]
 
   const navItems = [
     { key: 'inicio', icon: '⊞', label: 'Inicio' },
@@ -79,21 +98,33 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="bg-gray-50 min-h-screen w-full">
+    <div style={{background:'#0B1220'}} className="min-h-screen w-full font-sans text-white">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .card { background: #111827; border: 1px solid #243145; border-radius: 14px; }
+        .dot-pulse span { display:inline-block; width:6px; height:6px; border-radius:50%; background:#22C55E; margin:0 2px; animation: dotpulse 1.4s infinite; }
+        .dot-pulse span:nth-child(2){animation-delay:0.2s}
+        .dot-pulse span:nth-child(3){animation-delay:0.4s}
+        @keyframes dotpulse { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+        .bar-tooltip { display:none; position:absolute; bottom:105%; left:50%; transform:translateX(-50%); background:#1E293B; color:#F8FAFC; font-size:10px; font-weight:600; padding:4px 8px; border-radius:6px; white-space:nowrap; border:1px solid #243145; z-index:10; pointer-events:none; }
+        .bar-wrap:hover .bar-tooltip { display:block; }
+      `}</style>
 
-      {/* Desktop sidebar + main */}
       <div className="flex w-full">
 
-        {/* Sidebar — hidden on mobile */}
-        <aside className="hidden lg:flex flex-col w-52 xl:w-56 bg-white border-r border-gray-100 min-h-screen fixed top-0 left-0 z-30">
-          <div className="px-4 py-4 border-b border-gray-100 flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0">V</div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-gray-900 truncate">VendIA</p>
-              <p className="text-xs text-gray-400 truncate">SaaS de Automatización</p>
+        {/* Sidebar desktop */}
+        <aside className="hidden lg:flex flex-col w-56 xl:w-60 fixed top-0 left-0 min-h-screen z-30" style={{background:'#0D1526',borderRight:'1px solid #1E2D42'}}>
+          <div className="px-5 py-5" style={{borderBottom:'1px solid #1E2D42'}}>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{background:'#0B6B4B'}}>V</div>
+              <div>
+                <p className="text-sm font-bold" style={{color:'#F8FAFC'}}>VendIA</p>
+                <p className="text-xs" style={{color:'#64748B'}}>SaaS de Automatización</p>
+              </div>
             </div>
           </div>
-          <nav className="flex-1 px-2 py-3 space-y-0.5">
+          <nav className="flex-1 px-3 py-4 space-y-0.5">
             {[
               { icon: '⊞', label: 'Dashboard', active: true },
               { icon: '≡', label: 'Conversaciones' },
@@ -101,194 +132,248 @@ export default function Dashboard() {
               { icon: '👥', label: 'Clientes' },
               { icon: '⚙', label: 'Configuración' },
             ].map((item) => (
-              <button key={item.label} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${item.active ? 'bg-emerald-50 text-emerald-700 font-medium' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
+              <button key={item.label} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all" style={item.active ? {background:'rgba(11,107,75,0.15)',color:'#22C55E',fontWeight:600} : {color:'#94A3B8'}}>
                 <span>{item.icon}</span>
                 <span className="truncate">{item.label}</span>
               </button>
             ))}
           </nav>
-          <div className="px-2 pb-4 space-y-1">
-            <button className="w-full flex items-center justify-center gap-1.5 bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-emerald-600 transition-colors">
+          <div className="px-3 pb-5 space-y-2">
+            <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all" style={{background:'#0B6B4B',color:'white'}}>
               + Conectar WhatsApp
             </button>
-            <div className="flex items-center gap-2 px-3 py-1.5">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse flex-shrink-0"></span>
-              <span className="text-xs text-gray-400 truncate">Estado de Conexión</span>
+            <div className="flex items-center gap-2 px-2 py-1.5">
+              <span className="w-2 h-2 rounded-full animate-pulse" style={{background:'#22C55E'}}></span>
+              <span className="text-xs" style={{color:'#64748B'}}>Estado de Conexión</span>
             </div>
           </div>
         </aside>
 
-        {/* Main content */}
-        <div className="w-full lg:ml-52 xl:ml-56 flex flex-col min-h-screen">
+        {/* Main */}
+        <div className="w-full lg:ml-56 xl:ml-60 flex flex-col min-h-screen">
 
           {/* Mobile topbar */}
-          <header className="lg:hidden bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+          <header className="lg:hidden px-4 py-3 flex items-center justify-between sticky top-0 z-20" style={{background:'#0D1526',borderBottom:'1px solid #1E2D42'}}>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-emerald-700 rounded-md flex items-center justify-center text-white text-xs font-bold">V</div>
-              <span className="font-bold text-gray-900 text-sm">VendIA</span>
+              <div className="w-7 h-7 rounded-md flex items-center justify-center text-white text-xs font-bold" style={{background:'#0B6B4B'}}>V</div>
+              <span className="font-bold text-sm" style={{color:'#F8FAFC'}}>VendIA</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-lg">🔔</span>
-              <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-semibold text-emerald-700">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{background:'rgba(11,107,75,0.2)',color:'#22C55E'}}>
                 {user?.firstName?.[0] || 'U'}
               </div>
             </div>
           </header>
 
           {/* Desktop topbar */}
-          <header className="hidden lg:flex bg-white border-b border-gray-100 px-6 xl:px-8 py-4 items-center justify-between sticky top-0 z-20">
+          <header className="hidden lg:flex px-6 xl:px-8 py-4 items-center justify-between sticky top-0 z-20" style={{background:'#0D1526',borderBottom:'1px solid #1E2D42'}}>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Dashboard</h1>
-              <p className="text-xs text-gray-400">Resumen de la actividad de tu asistente</p>
+              <h1 className="text-lg font-bold" style={{color:'#F8FAFC'}}>Dashboard</h1>
+              <p className="text-xs" style={{color:'#64748B'}}>Resumen de la actividad de tu asistente</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> IA Online
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.2)',color:'#22C55E'}}>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:'#22C55E'}}></span>IA Online
               </span>
-              <span className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full">
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style={{background:'rgba(255,255,255,0.05)',border:'1px solid #243145',color:'#94A3B8'}}>
                 ⚡ WhatsApp Activo
               </span>
-              <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-50">🔔</button>
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-semibold text-emerald-700">
+              <span className="text-xs px-2.5 py-1 rounded-full" style={{background:'rgba(255,255,255,0.05)',border:'1px solid #243145',color:'#64748B'}}>
+                Sync: hace 2min
+              </span>
+              <button className="w-8 h-8 flex items-center justify-center rounded-lg transition-all" style={{color:'#64748B'}}>🔔</button>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{background:'rgba(11,107,75,0.2)',color:'#22C55E'}}>
                 {user?.firstName?.[0] || 'U'}
               </div>
             </div>
           </header>
 
-          {/* Page content */}
-          <div className="flex-1 px-4 md:px-6 xl:px-8 py-5 pb-24 lg:pb-8 space-y-5 max-w-6xl w-full mx-auto">
+          {/* Content */}
+          <div className="flex-1 px-4 md:px-6 xl:px-8 py-5 pb-24 lg:pb-8 space-y-4 w-full max-w-6xl mx-auto">
 
-            {/* Mobile status badges */}
-            <div className="lg:hidden flex gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 bg-white border border-gray-100 text-emerald-700 text-xs font-medium px-3 py-1.5 rounded-full shadow-sm">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> IA Online
-              </span>
-              <span className="inline-flex items-center gap-1.5 bg-white border border-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full shadow-sm">
-                ⚡ WhatsApp Activo
-              </span>
-            </div>
-
-            {/* Mobile title */}
+            {/* Mobile header */}
             <div className="lg:hidden">
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight">Dashboard</h1>
+              <h1 className="text-2xl font-black tracking-tight mb-3" style={{color:'#F8FAFC'}}>Dashboard</h1>
+              <div className="flex gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full" style={{background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.2)',color:'#22C55E'}}>
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:'#22C55E'}}></span>IA Online
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full" style={{background:'rgba(255,255,255,0.05)',border:'1px solid #243145',color:'#94A3B8'}}>
+                  ⚡ WhatsApp Activo
+                </span>
+              </div>
             </div>
 
             {/* KPIs */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {kpis.map((kpi, i) => (
-                <div key={i} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                  <p className="text-xs font-semibold text-gray-400 tracking-widest mb-2">{kpi.label}</p>
-                  <p className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight mb-1">{kpi.value}</p>
-                  <p className="text-xs text-emerald-600 font-medium">↑ {kpi.delta}</p>
+                <div key={i} className="card p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-base">{kpi.icon}</span>
+                    <span className="text-xs font-semibold" style={{color:'#22C55E'}}>↑ {kpi.delta}</span>
+                  </div>
+                  <p className="text-xs font-medium mb-1 uppercase tracking-wider" style={{color:'#64748B'}}>{kpi.label}</p>
+                  <p className="text-2xl font-black tracking-tight" style={{color:'#F8FAFC'}}>{kpi.value}</p>
+                  <p className="text-xs mt-1" style={{color:'#475569'}}>{kpi.sub}</p>
                 </div>
               ))}
             </div>
 
-            {/* Chart + AI brain */}
+            {/* Chart + AI Brain */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+              <div className="card p-5 lg:col-span-2">
                 <div className="flex items-center justify-between mb-5">
-                  <p className="font-semibold text-gray-900 text-sm">Actividad Semanal</p>
-                  <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">Últimos 7 días</span>
+                  <div>
+                    <p className="text-sm font-semibold" style={{color:'#F8FAFC'}}>Actividad Semanal</p>
+                    <p className="text-xs mt-0.5" style={{color:'#64748B'}}>Mensajes gestionados por la IA</p>
+                  </div>
+                  <span className="text-xs px-2.5 py-1 rounded-lg" style={{background:'rgba(255,255,255,0.05)',border:'1px solid #243145',color:'#94A3B8'}}>Últimos 7 días</span>
                 </div>
                 <div className="flex items-end gap-1.5 h-28 w-full">
-                  {chartBars.map((h, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1 min-w-0">
+                  {chartBars.map((bar, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1 min-w-0 relative bar-wrap" onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)}>
+                      <div className="bar-tooltip">{bar.v} msgs</div>
                       <div
-                        className={`w-full rounded-md ${i === 3 ? 'bg-emerald-700' : 'bg-emerald-100'}`}
-                        style={{height: `${h}%`}}
+                        className="w-full rounded-md transition-all duration-200"
+                        style={{
+                          height: `${bar.h}%`,
+                          background: i === 3 || hoveredBar === i ? '#0B6B4B' : 'rgba(34,197,94,0.15)',
+                          border: hoveredBar === i ? '1px solid #22C55E' : '1px solid transparent',
+                        }}
                       ></div>
-                      <span className="text-xs text-gray-400">{days[i]}</span>
+                      <span className="text-xs" style={{color:'#475569'}}>{days[i]}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* AI Brain card */}
-              <div className="bg-gray-900 rounded-xl p-5 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center text-lg flex-shrink-0">🧠</div>
+              {/* AI Brain */}
+              <div className="card p-5 flex flex-col" style={{background:'#0D1F2D',borderColor:'rgba(11,107,75,0.3)'}}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{background:'rgba(11,107,75,0.2)',border:'1px solid rgba(11,107,75,0.4)'}}>🧠</div>
                   <div>
-                    <p className="text-sm font-bold text-white">Cerebro de la IA</p>
-                    <p className="text-xs text-emerald-400">98.2% de precisión en respuestas</p>
+                    <p className="text-sm font-bold" style={{color:'#F8FAFC'}}>Cerebro de la IA</p>
+                    <p className="text-xs" style={{color:'#22C55E'}}>98.2% de precisión</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-300 leading-relaxed mb-4 flex-1">
+                <p className="text-sm leading-relaxed mb-4 flex-1" style={{color:'#94A3B8'}}>
                   La IA ha optimizado 4 flujos de venta hoy sin requerir intervención manual.
                 </p>
-                <button className="w-full bg-white text-gray-900 text-sm font-semibold py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
-                  Configurar Lógica
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {[{v:'24',l:'FAQs'},{v:'142',l:'Productos'},{v:'24/7',l:'Horario'}].map((item,i)=>(
+                    <div key={i} className="text-center p-2 rounded-lg" style={{background:'rgba(255,255,255,0.04)',border:'1px solid #243145'}}>
+                      <p className="text-sm font-bold" style={{color:'#22C55E'}}>{item.v}</p>
+                      <p className="text-xs" style={{color:'#64748B'}}>{item.l}</p>
+                    </div>
+                  ))}
+                </div>
+                <button className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all" style={{background:'rgba(11,107,75,0.15)',border:'1px solid rgba(11,107,75,0.4)',color:'#22C55E'}}>
+                  Administrar conocimiento
                 </button>
               </div>
             </div>
 
             {/* Chat simulator */}
-            <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-              <div className="px-5 pt-4 pb-2">
-                <p className="font-semibold text-gray-900 text-sm mb-3">Simulador de Chat</p>
-                <div className="bg-emerald-700 rounded-xl px-4 py-2.5 flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-white text-sm">👤</span>
-                    <span className="text-white text-sm font-medium">Cliente Potencial</span>
-                  </div>
-                  <span className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse"></span>
+            <div className="card overflow-hidden">
+              <div className="px-5 pt-4 pb-3" style={{borderBottom:'1px solid #1E2D42'}}>
+                <p className="text-sm font-semibold" style={{color:'#F8FAFC'}}>Simulador de Chat</p>
+                <p className="text-xs mt-0.5" style={{color:'#64748B'}}>Prueba cómo responde tu IA</p>
+              </div>
+              <div className="px-5 py-4">
+                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-4" style={{background:'#0B6B4B'}}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{background:'rgba(255,255,255,0.2)'}}>👤</div>
+                  <span className="text-sm font-medium text-white">Cliente Potencial</span>
+                  <span className="ml-auto w-2 h-2 rounded-full animate-pulse" style={{background:'#86EFAC'}}></span>
                 </div>
-                <div className="space-y-2 mb-3 min-h-20">
-                  <div className="bg-gray-50 rounded-xl rounded-tl-sm px-4 py-2.5 max-w-xs">
-                    <p className="text-sm text-gray-700">¿Qué precio tiene el plan SaaS avanzado?</p>
+                <div className="space-y-3 min-h-28 mb-4">
+                  <div className="max-w-xs">
+                    <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm" style={{background:'rgba(255,255,255,0.07)',border:'1px solid #243145'}}>
+                      <p className="text-sm" style={{color:'#E2E8F0'}}>¿Qué precio tiene el plan SaaS avanzado?</p>
+                    </div>
+                    <p className="text-xs mt-1 ml-1" style={{color:'#475569'}}>09:41</p>
                   </div>
                   <div className="flex justify-end">
-                    <div className="bg-emerald-700 rounded-xl rounded-tr-sm px-4 py-2.5 max-w-xs">
-                      <p className="text-sm text-white">El plan Avanzado cuesta $49/mes. Incluye IA ilimitada y 5 canales.</p>
-                      <p className="text-xs text-emerald-200 text-right mt-1">VendIA · 10:42 AM</p>
+                    <div className="max-w-xs">
+                      <div className="px-4 py-2.5 rounded-2xl rounded-tr-sm" style={{background:'#0B6B4B'}}>
+                        <p className="text-sm text-white">El plan Avanzado cuesta $49/mes. Incluye IA ilimitada y 5 canales.</p>
+                        <p className="text-xs text-right mt-1" style={{color:'#86EFAC'}}>VendIA · 09:42 ✓✓</p>
+                      </div>
                     </div>
                   </div>
+                  {isTyping && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0" style={{background:'rgba(11,107,75,0.2)'}}>🤖</div>
+                      <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm" style={{background:'rgba(255,255,255,0.07)',border:'1px solid #243145'}}>
+                        <div className="dot-pulse flex items-center h-4">
+                          <span></span><span></span><span></span>
+                        </div>
+                      </div>
+                      <span className="text-xs" style={{color:'#64748B'}}>IA respondiendo...</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl" style={{background:'rgba(255,255,255,0.04)',border:'1px solid #243145'}}>
+                  <input
+                    className="flex-1 text-sm bg-transparent focus:outline-none min-w-0"
+                    style={{color:'#94A3B8'}}
+                    placeholder="Probar respuesta de la IA..."
+                    value={chatInput}
+                    onChange={e => setChatInput(e.target.value)}
+                  />
+                  <button className="w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all flex-shrink-0" style={{background:'#0B6B4B',color:'white'}}>▷</button>
                 </div>
               </div>
-              <div className="border-t border-gray-100 px-4 py-3 flex items-center gap-3">
-                <input className="flex-1 text-sm text-gray-500 bg-transparent focus:outline-none min-w-0" placeholder="Probar respuesta de la IA..." />
-                <button className="w-8 h-8 bg-emerald-700 text-white rounded-full flex items-center justify-center text-sm hover:bg-emerald-600 transition-colors flex-shrink-0">▷</button>
-              </div>
             </div>
 
-            {/* Recent chats */}
-            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+            {/* Chats recientes */}
+            <div className="card p-5">
               <div className="flex items-center justify-between mb-4">
-                <p className="font-semibold text-gray-900 text-sm">Chats Recientes</p>
-                <button className="text-xs text-emerald-700 font-medium hover:underline">Ver todos</button>
+                <p className="text-sm font-semibold" style={{color:'#F8FAFC'}}>Chats Recientes</p>
+                <button className="text-xs font-medium transition-all" style={{color:'#22C55E'}}>Ver todos →</button>
               </div>
-              <div className="space-y-3">
-                {[
-                  { name: 'Marco Polo', msg: 'Interesado en integración con CRM...', time: '12 min', initial: 'M' },
-                  { name: 'Elena Gómez', msg: 'Cita programada para mañana.', time: '1 hr', initial: 'E' },
-                ].map((chat, i) => (
-                  <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-bold text-emerald-700 flex-shrink-0">
-                      {chat.initial}
+              <div className="space-y-2">
+                {chats.map((chat, i) => {
+                  const st = statusMap[chat.status]
+                  return (
+                    <div key={i} className="flex items-center gap-3 py-3 px-3 rounded-xl transition-all" style={{border:'1px solid transparent'}}>
+                      <div className="relative flex-shrink-0">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{background:'rgba(11,107,75,0.15)',color:'#22C55E'}}>{chat.initial}</div>
+                        <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 ${st.dot}`} style={{borderColor:'#111827'}}></span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="text-sm font-semibold truncate" style={{color:'#F8FAFC'}}>{chat.name}</p>
+                          <span className={`text-xs font-medium flex-shrink-0 ${st.color}`}>● {st.label}</span>
+                        </div>
+                        <p className="text-xs truncate" style={{color:'#64748B'}}>{chat.msg}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <span className="text-xs" style={{color:'#475569'}}>{chat.time}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full" style={{background:'rgba(255,255,255,0.06)',color:'#94A3B8'}}>{chat.tag}</span>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{chat.name}</p>
-                      <p className="text-xs text-gray-400 truncate">{chat.msg}</p>
-                    </div>
-                    <span className="text-xs text-gray-400 flex-shrink-0">{chat.time}</span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
 
-            {/* Activity feed */}
-            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
-              <p className="font-semibold text-gray-900 text-sm mb-4">Actividad Reciente</p>
-              <div className="space-y-4">
-                {[
-                  { dot: 'bg-emerald-500', text: 'Base de datos', sub: 'actualizada con 14 nuevos clientes.', time: 'HOY, 09:15 AM' },
-                  { dot: 'bg-emerald-500', text: 'WhatsApp', sub: 'reconectado exitosamente.', time: 'AYER, 06:45 PM' },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-3 items-start">
-                    <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${item.dot}`}></span>
-                    <div className="min-w-0">
-                      <p className="text-sm text-gray-700"><span className="font-semibold">{item.text}</span> {item.sub}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{item.time}</p>
+            {/* Timeline */}
+            <div className="card p-5">
+              <p className="text-sm font-semibold mb-4" style={{color:'#F8FAFC'}}>Actividad en tiempo real</p>
+              <div className="space-y-0">
+                {timeline.map((item, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="flex flex-col items-center">
+                      <div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${item.color}`}></div>
+                      {i < timeline.length - 1 && <div className="w-px flex-1 my-1" style={{background:'#1E2D42'}}></div>}
+                    </div>
+                    <div className="pb-4 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-mono font-semibold" style={{color:'#22C55E'}}>{item.time}</span>
+                        <span className="text-sm font-medium" style={{color:'#E2E8F0'}}>{item.text}</span>
+                      </div>
+                      <p className="text-xs mt-0.5" style={{color:'#475569'}}>{item.sub}</p>
                     </div>
                   </div>
                 ))}
@@ -296,51 +381,43 @@ export default function Dashboard() {
             </div>
 
             {/* Bot config */}
-            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
-              <p className="font-semibold text-gray-900 text-sm mb-4">Configuración del Bot</p>
+            <div className="card p-5">
+              <p className="text-sm font-semibold mb-4" style={{color:'#F8FAFC'}}>Configuración del Bot</p>
               <div className="space-y-3">
-                <div>
-                  <label className="text-xs text-gray-500 font-medium block mb-1">Nombre del bot</label>
-                  <input
-                    className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-emerald-300"
-                    value={config.botName}
-                    onChange={e => setConfig({...config, botName: e.target.value})}
-                    placeholder="Asistente"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 font-medium block mb-1">Descripción del negocio</label>
-                  <textarea
-                    className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-emerald-300 h-20 resize-none"
-                    value={config.businessContext}
-                    onChange={e => setConfig({...config, businessContext: e.target.value})}
-                    placeholder="Describe tu negocio..."
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 font-medium block mb-1">Catálogo</label>
-                  <textarea
-                    className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-emerald-300 h-20 resize-none"
-                    value={config.catalog}
-                    onChange={e => setConfig({...config, catalog: e.target.value})}
-                    placeholder="Lista tus productos o servicios..."
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 font-medium block mb-1">Preguntas frecuentes</label>
-                  <textarea
-                    className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-emerald-300 h-20 resize-none"
-                    value={config.faq}
-                    onChange={e => setConfig({...config, faq: e.target.value})}
-                    placeholder="¿Cuáles son sus horarios? ..."
-                  />
-                </div>
+                {[
+                  { label: 'Nombre del bot', key: 'botName', placeholder: 'Ej: Asistente VendIA', multiline: false },
+                  { label: 'Descripción del negocio', key: 'businessContext', placeholder: 'Describe tu negocio...', multiline: true },
+                  { label: 'Catálogo', key: 'catalog', placeholder: 'Lista tus productos o servicios...', multiline: true },
+                  { label: 'Preguntas frecuentes', key: 'faq', placeholder: '¿Cuáles son sus horarios?...', multiline: true },
+                ].map((field) => (
+                  <div key={field.key}>
+                    <label className="text-xs font-medium block mb-1.5" style={{color:'#64748B'}}>{field.label}</label>
+                    {field.multiline ? (
+                      <textarea
+                        className="w-full px-3 py-2.5 rounded-lg text-sm focus:outline-none h-20 resize-none transition-all"
+                        style={{background:'rgba(255,255,255,0.04)',border:'1px solid #243145',color:'#E2E8F0'}}
+                        placeholder={field.placeholder}
+                        value={config[field.key as keyof typeof config]}
+                        onChange={e => setConfig({...config, [field.key]: e.target.value})}
+                      />
+                    ) : (
+                      <input
+                        className="w-full px-3 py-2.5 rounded-lg text-sm focus:outline-none transition-all"
+                        style={{background:'rgba(255,255,255,0.04)',border:'1px solid #243145',color:'#E2E8F0'}}
+                        placeholder={field.placeholder}
+                        value={config[field.key as keyof typeof config]}
+                        onChange={e => setConfig({...config, [field.key]: e.target.value})}
+                      />
+                    )}
+                  </div>
+                ))}
                 <button
                   onClick={saveConfig}
                   disabled={saving}
-                  className="w-full bg-emerald-700 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                  className="w-full py-3 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+                  style={{background:'#0B6B4B',color:'white'}}
                 >
-                  {saving ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar configuración'}
+                  {saving ? 'Guardando...' : saved ? '✓ Guardado correctamente' : 'Guardar configuración'}
                 </button>
               </div>
             </div>
@@ -350,13 +427,14 @@ export default function Dashboard() {
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-30 safe-area-pb">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30" style={{background:'#0D1526',borderTop:'1px solid #1E2D42'}}>
         <div className="flex items-center justify-around px-2 py-2">
           {navItems.map((item) => (
             <button
               key={item.key}
               onClick={() => setMobileNav(item.key)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${mobileNav === item.key ? 'text-emerald-700' : 'text-gray-400'}`}
+              className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all"
+              style={mobileNav === item.key ? {color:'#22C55E'} : {color:'#475569'}}
             >
               <span className="text-xl leading-none">{item.icon}</span>
               <span className="text-xs font-medium">{item.label}</span>
@@ -366,7 +444,7 @@ export default function Dashboard() {
       </nav>
 
       {/* FAB mobile */}
-      <button className="lg:hidden fixed bottom-20 right-4 w-12 h-12 bg-emerald-700 text-white rounded-full shadow-lg flex items-center justify-center text-xl z-20 hover:bg-emerald-600 transition-colors">
+      <button className="lg:hidden fixed bottom-20 right-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-xl z-20 transition-all" style={{background:'#0B6B4B',color:'white'}}>
         +
       </button>
 
