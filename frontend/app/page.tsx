@@ -2,66 +2,85 @@ import Link from 'next/link'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white text-gray-900 font-sans">
+    <main style={{background:'#05070B',color:'#FFFFFF',fontFamily:'Inter,sans-serif',minHeight:'100vh',overflowX:'hidden'}}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+        .card{background:#0D1117;border:1px solid #1F2937;border-radius:16px}
+        .btn-primary{background:#0B6B4B;color:#fff;border:none;cursor:pointer;font-weight:600;transition:all 0.2s}
+        .btn-primary:hover{background:#0d7d58}
+        .accent{color:#22C55E}
+        .muted{color:#94A3B8}
+        .faq-item summary{cursor:pointer;list-style:none;padding:16px 0;display:flex;justify-content:space-between;align-items:center;font-weight:500;border-bottom:1px solid #1F2937}
+        .faq-item summary::-webkit-details-marker{display:none}
+        .faq-item[open] summary{color:#22C55E}
+        .faq-item p{padding:12px 0 16px;color:#94A3B8;font-size:14px;line-height:1.6;border-bottom:1px solid #1F2937}
+        .phone-mockup{background:linear-gradient(135deg,#0D1117,#111827);border:2px solid #1F2937;border-radius:36px;padding:12px;box-shadow:0 40px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(34,197,94,0.1);position:relative;overflow:hidden}
+        .phone-screen{background:#05070B;border-radius:26px;padding:16px;min-height:320px;position:relative}
+        .metric-card{background:#0D1117;border:1px solid #1F2937;border-radius:12px;padding:16px 20px;flex:1;min-width:0}
+        .step-num{width:32px;height:32px;border-radius:50%;background:rgba(11,107,75,0.15);border:1px solid rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;color:#22C55E;font-weight:700;font-size:14px;flex-shrink:0}
+        .tag{background:rgba(255,255,255,0.06);border:1px solid #1F2937;border-radius:100px;padding:8px 16px;font-size:13px;color:#94A3B8;display:inline-flex;align-items:center;gap:6px}
+        .compare-col{background:#0D1117;border:1px solid #1F2937;border-radius:16px;padding:24px;flex:1;min-width:0}
+        .compare-col.good{border-color:rgba(34,197,94,0.3);background:rgba(11,107,75,0.06)}
+        .test-card{background:#0D1117;border:1px solid #1F2937;border-radius:14px;padding:20px}
+        @media(max-width:768px){.hero-grid{grid-template-columns:1fr!important}.hide-mobile{display:none!important}.compare-flex{flex-direction:column!important}}
+      `}</style>
 
-      {/* Nav */}
-      <nav className="flex justify-between items-center px-6 md:px-16 py-4 border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur z-50">
-        <div className="text-xl font-black tracking-tight text-gray-900">Vend<span className="text-emerald-700">IA</span></div>
-        <div className="hidden md:flex gap-8 items-center">
-          <a href="#funciones" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Funciones</a>
-          <a href="#casos" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Casos de uso</a>
-          <a href="#precios" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Precios</a>
-          <Link href="/sign-in" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Iniciar sesión</Link>
+      {/* Navbar */}
+      <nav style={{position:'sticky',top:0,zIndex:50,background:'rgba(5,7,11,0.95)',backdropFilter:'blur(12px)',borderBottom:'1px solid #1F2937',padding:'0 24px'}}>
+        <div style={{maxWidth:1120,margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',height:60}}>
+          <div style={{fontWeight:800,fontSize:20,letterSpacing:'-0.02em'}}>Vend<span className="accent">IA</span></div>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <Link href="/sign-in" style={{color:'#94A3B8',textDecoration:'none',fontSize:14,fontWeight:500}}>Iniciar sesión</Link>
+            <Link href="/sign-up" className="btn-primary" style={{padding:'8px 20px',borderRadius:100,fontSize:14,textDecoration:'none',display:'inline-block'}}>Empezar gratis</Link>
+          </div>
         </div>
-        <Link href="/sign-up" className="text-sm bg-emerald-700 text-white px-5 py-2.5 rounded-full hover:bg-emerald-600 transition-colors font-medium">
-          Empezar ahora
-        </Link>
       </nav>
 
       {/* Hero */}
-      <section className="px-6 md:px-16 pt-16 md:pt-24 pb-16 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+      <section style={{padding:'80px 24px 60px',maxWidth:1120,margin:'0 auto'}}>
+        <div className="hero-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:48,alignItems:'center'}}>
           <div>
-            <h1 className="text-4xl md:text-6xl font-black leading-tight tracking-tight text-gray-950 mb-6">
-              Tu negocio responde WhatsApp incluso cuando no estás disponible.
+            <div style={{display:'inline-flex',alignItems:'center',gap:8,background:'rgba(34,197,94,0.08)',border:'1px solid rgba(34,197,94,0.2)',borderRadius:100,padding:'6px 14px',marginBottom:24}}>
+              <span style={{width:6,height:6,borderRadius:'50%',background:'#22C55E',display:'inline-block',animation:'pulse 2s infinite'}}></span>
+              <span style={{fontSize:12,color:'#22C55E',fontWeight:600}}>PROCESO AUTOMÁTICO</span>
+            </div>
+            <h1 style={{fontSize:'clamp(2rem,5vw,3.5rem)',fontWeight:900,lineHeight:1.05,letterSpacing:'-0.03em',marginBottom:20}}>
+              Tu negocio responde WhatsApp incluso cuando estás ocupado
             </h1>
-            <p className="text-gray-500 text-base md:text-lg leading-relaxed mb-8 max-w-md">
-              VendIA responde preguntas frecuentes, captura información de tu negocio y ayuda a atender clientes automáticamente, sin la presencia de un experto en tu marca.
+            <p style={{fontSize:16,color:'#94A3B8',lineHeight:1.7,marginBottom:32,maxWidth:420}}>
+              Automatiza la atención y vende 24/7 sin tocar el teléfono. Inteligencia artificial diseñada para negocios locales.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/sign-up" className="bg-emerald-700 text-white px-6 py-3 rounded-full font-semibold hover:bg-emerald-600 transition-colors text-sm">
-                Probar demo
-              </Link>
-              <a href="#funciones" className="border border-gray-200 text-gray-700 px-6 py-3 rounded-full font-medium hover:bg-gray-50 transition-colors text-sm">
-                Ver cómo funciona
-              </a>
+            <div style={{display:'flex',flexDirection:'column',gap:12,alignItems:'flex-start'}}>
+              <Link href="/sign-up" className="btn-primary" style={{padding:'14px 28px',borderRadius:12,fontSize:16,textDecoration:'none',display:'inline-block'}}>Empezar gratis</Link>
+              <p style={{fontSize:12,color:'#475569'}}>No requiere tarjeta de crédito</p>
             </div>
           </div>
 
-          {/* Chat mockup */}
-          <div className="bg-gray-50 rounded-3xl border border-gray-100 p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-5 pb-4 border-b border-gray-200">
-              <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-sm">🤖</div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Charly</p>
-                <p className="text-xs text-emerald-600">● Disponible</p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-xs shadow-sm">
-                <p className="text-xs text-gray-700">Hola, ¿me puedes decir el costo de cada para mañana?</p>
-              </div>
-              <div className="flex justify-end">
-                <div className="bg-emerald-700 rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-xs">
-                  <p className="text-xs text-white">Claro, el servicio tiene un costo de $270. ¿Te gustaría agendar una cita para mañana? Tenemos disponibilidad a las 10am y 3pm.</p>
+          {/* Phone mockup */}
+          <div style={{display:'flex',justifyContent:'center'}}>
+            <div className="phone-mockup" style={{width:'100%',maxWidth:280}}>
+              <div className="phone-screen">
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,paddingBottom:12,borderBottom:'1px solid #1F2937'}}>
+                  <div style={{width:32,height:32,borderRadius:'50%',background:'rgba(11,107,75,0.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🤖</div>
+                  <div>
+                    <p style={{fontSize:12,fontWeight:600,color:'#F8FAFC'}}>VendIA Bot</p>
+                    <p style={{fontSize:10,color:'#22C55E'}}>● En línea</p>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-xs shadow-sm">
-                <p className="text-xs text-gray-700">Sí, por favor</p>
-              </div>
-              <div className="flex justify-end">
-                <div className="bg-emerald-700 rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-xs">
-                  <p className="text-xs text-white">Confirmado. Te esperamos mañana. ¡Confírma tu cita! ✅</p>
+                <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                  <div style={{background:'#1F2937',borderRadius:'12px 12px 12px 4px',padding:'10px 14px',maxWidth:'85%'}}>
+                    <p style={{fontSize:12,color:'#E2E8F0',lineHeight:1.5}}>¡Hola! ¿En qué te puedo ayudar hoy? 😊</p>
+                  </div>
+                  <div style={{display:'flex',justifyContent:'flex-end'}}>
+                    <div style={{background:'#0B6B4B',borderRadius:'12px 12px 4px 12px',padding:'10px 14px',maxWidth:'85%'}}>
+                      <p style={{fontSize:12,color:'#fff',lineHeight:1.5}}>¿Tienen stock del modelo Pro?</p>
+                    </div>
+                  </div>
+                  <div style={{background:'#1F2937',borderRadius:'12px 12px 12px 4px',padding:'10px 14px',maxWidth:'85%'}}>
+                    <p style={{fontSize:12,color:'#E2E8F0',lineHeight:1.5}}>¡Sí! Tenemos 5 unidades. ¿Te lo reservo? 🎉</p>
+                    <p style={{fontSize:10,color:'#22C55E',textAlign:'right',marginTop:4}}>✓✓ 10:42</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -69,165 +88,178 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Problem */}
-      <section className="bg-gray-50 px-6 md:px-16 py-16 md:py-24" id="funciones">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-xs font-semibold text-emerald-700 uppercase tracking-widest mb-4">El desafío</p>
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gray-950 mb-14">
-            Atender WhatsApp no debería ser un trabajo de tiempo completo.
-          </h2>
-          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { icon: '💬', title: 'Clientes sin respuesta', desc: 'El 63% de las personas abandonan una compra si no reciben respuesta en los primeros 15 minutos.' },
-              { icon: '🌙', title: 'Mensajes fuera de horario', desc: 'Tu negocio sigue generando consultas en la noche y fines de semana, pero nadie los atiende.' },
-              { icon: '🔁', title: 'Consultas repetitivas', desc: 'Tu tiempo se pierde respondiendo las mismas preguntas una y otra vez a tus clientes.' },
-              { icon: '📉', title: 'Pérdida de ventas', desc: 'Cada mensaje ignorado genera una venta perdida que se fue a la competencia que sí respondió.' },
-            ].map((item, i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 text-left shadow-sm">
-                <div className="text-2xl mb-3">{item.icon}</div>
-                <h3 className="font-bold text-sm text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="px-6 md:px-16 py-16 md:py-24 max-w-5xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start mb-12 gap-6">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight text-gray-950">Configura tu asistente en minutos.</h2>
-            <p className="text-gray-500 mt-3 max-w-md">Un proceso diseñado para que no pierdas tiempo con configuraciones complejas.</p>
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <button className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50">←</button>
-            <button className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50">→</button>
-          </div>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6">
+      {/* Metrics */}
+      <section style={{padding:'0 24px 64px',maxWidth:1120,margin:'0 auto'}}>
+        <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
           {[
-            { num: '01', title: 'Describe tu negocio', desc: 'Sube tu catálogo, precios y horarios. VendIA aprende tu marca, lenguaje y tono de voz.' },
-            { num: '02', title: 'Conecta WhatsApp', desc: 'Tu negocio sigue generando consultas. Es tan sencillo como iniciar sesión en WhatsApp Web.' },
-            { num: '03', title: 'VendIA responde', desc: 'El sistema comienza a filtrar y responder. Solo intervendrás en lo más importante.' },
-          ].map((step, i) => (
-            <div key={i} className="border border-gray-100 rounded-2xl p-6 bg-white">
-              <p className="text-3xl font-black text-gray-100 mb-4">{step.num}</p>
-              <h3 className="font-bold text-gray-900 mb-2">{step.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{step.desc}</p>
+            { v:'+85%', l:'Más ventas' },
+            { v:'+60%', l:'Clientes bien atendidos' },
+            { v:'24/7', l:'Atención automática' },
+          ].map((m,i) => (
+            <div key={i} className="metric-card">
+              <p style={{fontSize:28,fontWeight:900,color:'#22C55E',letterSpacing:'-0.02em'}}>{m.v}</p>
+              <p style={{fontSize:12,color:'#64748B',marginTop:4}}>{m.l}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Use cases */}
-      <section className="bg-gray-50 px-6 md:px-16 py-16 md:py-24" id="casos">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-gray-950 text-center mb-12">Diseñado para negocios locales.</h2>
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {[
-              { icon: '✂️', title: 'Estéticas y Barberías', desc: 'Agenda turnos, confirma disponibilidad y deriva el trabajo con clientes bases.' },
-              { icon: '☕', title: 'Cafeterías y Panaderías', desc: 'Toma pedidos anticipados, confirma el menú del día y proporciona la ubicación exacta a nuevos clientes.' },
-              { icon: '🏪', title: 'Tiendas Locales', desc: 'Gestiona consultas de stock de productos, métodos de pago y tiempos de entrega de manera inmediata.', featured: true },
-              { icon: '🍽️', title: 'Restaurantes', desc: 'Gestiona reservas de mesa y programa automáticamente recordatorios personalizados.' },
-            ].map((item, i) => (
-              <div key={i} className={`rounded-2xl p-6 ${item.featured ? 'bg-emerald-700 text-white' : 'bg-white border border-gray-100'}`}>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg mb-4 ${item.featured ? 'bg-emerald-600' : 'bg-gray-50'}`}>{item.icon}</div>
-                <h3 className={`font-bold mb-2 ${item.featured ? 'text-white' : 'text-gray-900'}`}>{item.title}</h3>
-                <p className={`text-sm leading-relaxed ${item.featured ? 'text-emerald-100' : 'text-gray-500'}`}>{item.desc}</p>
+      {/* Cómo funciona */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:40}}>Cómo funciona</h2>
+        <div style={{display:'flex',flexDirection:'column',gap:24}}>
+          {[
+            { n:'1', t:'Configura', d:'Escanea tu código QR, conecta WhatsApp y carga el catálogo de ventas.' },
+            { n:'2', t:'Entrena', d:'Sube tus datos, estadísticas y preguntas. La IA aprende todo sobre tu negocio.' },
+            { n:'3', t:'Conecta', d:'Conecta todo con un par de clics de registro y actualiza información al momento.' },
+            { n:'4', t:'VendIA responde', d:'Tu asistente empieza a vender y atender clientes 24/7 de forma automática.' },
+          ].map((step, i) => (
+            <div key={i} style={{display:'flex',gap:16,alignItems:'flex-start'}}>
+              <div className="step-num">{step.n}</div>
+              <div>
+                <p style={{fontWeight:700,fontSize:16,marginBottom:6}}>{step.t}</p>
+                <p style={{fontSize:14,color:'#94A3B8',lineHeight:1.6}}>{step.d}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Centro de Mando */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:12}}>El Centro de Mando</h2>
+        <p style={{color:'#94A3B8',marginBottom:32,fontSize:15}}>Ten el control de tu negocio en una interfaz diseñada para la efectividad.</p>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16}}>
+          <div className="card" style={{padding:24}}>
+            <div style={{width:40,height:40,background:'rgba(34,197,94,0.1)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,marginBottom:16}}>📊</div>
+            <p style={{fontWeight:700,fontSize:16,marginBottom:8}}>Dashboard de Ventas</p>
+            <p style={{fontSize:13,color:'#94A3B8',lineHeight:1.6}}>Visualiza ideas y métricas en tiempo real con gráficas de alto impacto.</p>
+          </div>
+          <div className="card" style={{padding:24}}>
+            <div style={{width:40,height:40,background:'rgba(34,197,94,0.1)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,marginBottom:16}}>🧠</div>
+            <p style={{fontWeight:700,fontSize:16,marginBottom:8}}>Base de Conocimientos</p>
+            <p style={{fontSize:13,color:'#94A3B8',lineHeight:1.6}}>Carga tu catálogo, preguntas y respuestas para optimizar todo tu equipo.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Diseñado para ti */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:32}}>Diseñado para ti</h2>
+        <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
+          {[
+            {icon:'☕',l:'Cafeterías'},{icon:'✂️',l:'Estéticas'},{icon:'🏪',l:'Tiendas Locales'},
+            {icon:'🏥',l:'Consultorios'},{icon:'🛠',l:'Servicios'},{icon:'➕',l:'Más'},
+          ].map((cat,i) => (
+            <span key={i} className="tag">{cat.icon} {cat.l}</span>
+          ))}
+        </div>
+      </section>
+
+      {/* Antes vs Después */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:32}}>El cambio es real</h2>
+        <div className="compare-flex" style={{display:'flex',gap:16}}>
+          <div className="compare-col">
+            <p style={{fontWeight:700,marginBottom:16,color:'#EF4444'}}>✕ Sin VendIA</p>
+            {['Mensajes ignorados por horas','Pérdida de clientes por falta de respuesta','Consultas en madrugadas sin atender','Solo mensajes en horario diurno'].map((t,i)=>(
+              <div key={i} style={{display:'flex',gap:10,marginBottom:10}}>
+                <span style={{color:'#EF4444',flexShrink:0}}>✕</span>
+                <p style={{fontSize:13,color:'#94A3B8'}}>{t}</p>
+              </div>
+            ))}
+          </div>
+          <div className="compare-col good">
+            <p style={{fontWeight:700,marginBottom:16,color:'#22C55E'}}>✓ Con VendIA</p>
+            {['Respuestas en menos de 1 segundo','Ventas cerradas mientras duermes','Claro mensajes sin confusiones','Siempre disponible'].map((t,i)=>(
+              <div key={i} style={{display:'flex',gap:10,marginBottom:10}}>
+                <span style={{color:'#22C55E',flexShrink:0}}>✓</span>
+                <p style={{fontSize:13,color:'#94A3B8'}}>{t}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Dashboard stats */}
-      <section className="px-6 md:px-16 py-16 md:py-24 max-w-5xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-black tracking-tight text-gray-950 text-center mb-4">Todo bajo control desde tu panel.</h2>
-        <p className="text-center text-gray-500 mb-12">Visualiza el rendimiento de tu asistente y las conversaciones que ha gestionado por ti.</p>
-        <div className="bg-gray-950 rounded-3xl p-6 md:p-10">
-          <div className="bg-gray-900 rounded-2xl p-6 mb-4">
-            <div className="h-8 bg-gray-800 rounded-lg w-48 mb-6"></div>
-            <div className="grid grid-cols-3 gap-6 mb-6">
-              {[
-                { label: 'Conversaciones', value: '1,284' },
-                { label: 'Msgs. atendidos', value: '8,402' },
-                { label: 'Tiempo promedio', value: '42h' },
-              ].map((stat, i) => (
-                <div key={i}>
-                  <p className="text-xs text-gray-500 mb-1">{stat.label}</p>
-                  <p className="text-2xl font-black text-white">{stat.value}</p>
+      {/* Testimonios */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:32}}>Lo que dicen</h2>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16}}>
+          {[
+            { q:'"VendIA cambió mi negocio. Ahora los clientes dicen que les han llegado de inmediato sin que el día sea un solo por el app."', name:'Ana Martínez', role:'Tienda local' },
+            { q:'"Recuperé más de 3hrs de jornada. La IA maneja dudas de precios y atención al cliente cuando yo no puedo."', name:'Carlos Wall', role:'Consultor' },
+          ].map((t,i)=>(
+            <div key={i} className="test-card">
+              <p style={{fontSize:14,color:'#94A3B8',lineHeight:1.7,marginBottom:16}}>{t.q}</p>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:32,height:32,borderRadius:'50%',background:'rgba(11,107,75,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,color:'#22C55E',fontWeight:700}}>{t.name[0]}</div>
+                <div>
+                  <p style={{fontSize:13,fontWeight:600}}>{t.name}</p>
+                  <p style={{fontSize:12,color:'#64748B'}}>{t.role}</p>
                 </div>
-              ))}
+              </div>
             </div>
-            <div className="h-24 bg-gray-800 rounded-xl flex items-center justify-center">
-              <p className="text-xs text-gray-600">Actividad de conversaciones en tiempo real</p>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* Pricing */}
-      <section className="bg-gray-50 px-6 md:px-16 py-16 md:py-24" id="precios">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-gray-950 text-center mb-12">Planes simples para negocios en crecimiento.</h2>
-          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            <div className="bg-white border border-gray-200 rounded-2xl p-8">
-              <p className="font-bold text-gray-900 mb-1">Plan Beta</p>
-              <p className="text-4xl font-black text-gray-950 mb-1">Gratis</p>
-              <p className="text-xs text-gray-400 mb-6">por tiempo limitado · MXN</p>
-              <ul className="space-y-3 mb-8">
-                {['Hasta 300 conversaciones/mes','Configuración base','1 número de WhatsApp'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                    <span className="text-emerald-600 font-bold">○</span>{f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/sign-up" className="block text-center py-3 rounded-full border-2 border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors">
-                Seleccionar Beta
-              </Link>
-            </div>
-            <div className="bg-emerald-700 rounded-2xl p-8 relative">
-              <div className="absolute -top-3 right-6 bg-white text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">Popular</div>
-              <p className="font-bold text-white mb-1">Plan Pro</p>
-              <p className="text-4xl font-black text-white mb-1">$49</p>
-              <p className="text-xs text-emerald-200 mb-6">por mes · USD</p>
-              <ul className="space-y-3 mb-8">
-                {['Conversaciones ilimitadas','Catálogo dinámico','Prioridad en soporte','Análisis avanzado'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-emerald-100">
-                    <span className="text-white font-bold">○</span>{f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/sign-up" className="block text-center py-3 rounded-full bg-white text-emerald-700 font-semibold text-sm hover:bg-emerald-50 transition-colors">
-                Seleccionar Pro
-              </Link>
-            </div>
-          </div>
-        </div>
+      {/* FAQ */}
+      <section style={{padding:'64px 24px',maxWidth:720,margin:'0 auto'}}>
+        <h2 style={{fontSize:'clamp(1.5rem,4vw,2.5rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:32}}>Preguntas frecuentes</h2>
+        {[
+          { q:'¿Cómo puedo suscribirme?', a:'Solo crea una cuenta, conecta tu WhatsApp Business y configura tu bot en menos de 10 minutos.' },
+          { q:'¿Funciona con WhatsApp normal?', a:'VendIA funciona con WhatsApp Business API. Te guiamos en todo el proceso de configuración.' },
+          { q:'¿Puedo interactuar de forma manual?', a:'Sí, puedes tomar control de cualquier conversación en cualquier momento desde el dashboard.' },
+        ].map((faq,i)=>(
+          <details key={i} className="faq-item">
+            <summary>
+              <span>{faq.q}</span>
+              <span style={{color:'#64748B',fontSize:18}}>+</span>
+            </summary>
+            <p>{faq.a}</p>
+          </details>
+        ))}
       </section>
 
-      {/* CTA */}
-      <section className="px-6 md:px-16 py-16 md:py-24">
-        <div className="max-w-2xl mx-auto bg-gray-950 rounded-3xl p-10 md:p-16 text-center">
-          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight mb-6">
-            Empieza a atender clientes automáticamente.
+      {/* CTA final */}
+      <section style={{padding:'64px 24px',maxWidth:1120,margin:'0 auto'}}>
+        <div style={{background:'linear-gradient(135deg,#0B1F15,#071811)',border:'1px solid rgba(34,197,94,0.2)',borderRadius:24,padding:'60px 32px',textAlign:'center'}}>
+          <h2 style={{fontSize:'clamp(1.75rem,5vw,3rem)',fontWeight:900,letterSpacing:'-0.03em',marginBottom:16}}>
+            ¿Listo para automatizar WhatsApp?
           </h2>
-          <p className="text-gray-400 mb-8 text-lg">Únete a los negocios que ya están escalando su atención al cliente con precisión y profesionalismo.</p>
-          <Link href="/sign-up" className="inline-block bg-emerald-500 text-white px-8 py-4 rounded-xl text-base font-bold hover:bg-emerald-400 transition-colors">
-            Solicitar acceso
+          <p style={{color:'#94A3B8',fontSize:16,marginBottom:32,maxWidth:400,margin:'0 auto 32px'}}>
+            Únete a los negocios que ya están escalando sin esfuerzo.
+          </p>
+          <Link href="/sign-up" className="btn-primary" style={{padding:'16px 36px',borderRadius:12,fontSize:16,textDecoration:'none',display:'inline-block',fontWeight:700}}>
+            Registrar acceso
           </Link>
+          <p style={{fontSize:12,color:'#475569',marginTop:12}}>Instalación guiada en 5 minutos</p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="px-6 md:px-16 py-6 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="text-xl font-black tracking-tight">Vend<span className="text-emerald-700">IA</span></div>
-        <p className="text-xs text-gray-400">© 2026 VendIA · Todos los derechos reservados</p>
-        <div className="flex gap-6">
-          <a href="#" className="text-xs text-gray-400 hover:text-gray-700">Términos</a>
-          <a href="#" className="text-xs text-gray-400 hover:text-gray-700">Privacidad</a>
-          <a href="#" className="text-xs text-gray-400 hover:text-gray-700">Contacto</a>
+      <footer style={{borderTop:'1px solid #1F2937',padding:'40px 24px'}}>
+        <div style={{maxWidth:1120,margin:'0 auto',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:32}}>
+          <div>
+            <div style={{fontWeight:800,fontSize:18,marginBottom:12}}>Vend<span className="accent">IA</span></div>
+            <p style={{fontSize:13,color:'#64748B',lineHeight:1.6}}>Automatización inteligente para negocios locales.</p>
+          </div>
+          {[
+            { title:'Producto', links:['Funciones','Precios','FAQ','Changelog'] },
+            { title:'Compañía', links:['Acerca de','Blog','Términos','Privacidad'] },
+            { title:'Soporte', links:['Documentación','Contacto','WhatsApp','Discord'] },
+          ].map((col,i)=>(
+            <div key={i}>
+              <p style={{fontWeight:600,fontSize:13,marginBottom:12}}>{col.title}</p>
+              {col.links.map((l,j)=>(
+                <p key={j} style={{fontSize:13,color:'#64748B',marginBottom:8,cursor:'pointer'}}>{l}</p>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div style={{maxWidth:1120,margin:'32px auto 0',paddingTop:24,borderTop:'1px solid #1F2937',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
+          <p style={{fontSize:12,color:'#475569'}}>© 2026 VendIA · Todos los derechos reservados</p>
+          <p style={{fontSize:12,color:'#475569'}}>Hecho con ❤️ para negocios locales</p>
         </div>
       </footer>
 
