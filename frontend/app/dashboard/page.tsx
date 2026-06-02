@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import axios from 'axios'
 
@@ -221,29 +221,49 @@ function ChatSimulator() {
   )
 }
 
+function OpsSummary() {
+  const items = [
+    { label: 'Plan actual', value: 'Beta activo', detail: 'Listo para pilotos comerciales' },
+    { label: 'WhatsApp Business', value: 'Conectado', detail: 'Webhook y lectura habilitados' },
+    { label: 'Entrenamiento IA', value: '82%', detail: 'Completa catalogo y preguntas frecuentes' },
+  ]
+
+  return (
+    <section className="ops-strip">
+      {items.map((item) => (
+        <article className="ops-card" key={item.label}>
+          <span>{item.label}</span>
+          <strong>{item.value}</strong>
+          <p>{item.detail}</p>
+        </article>
+      ))}
+      <article className="ops-card action">
+        <span>Siguiente paso</span>
+        <strong>Publicar base de conocimiento</strong>
+        <button>Completar configuracion</button>
+      </article>
+    </section>
+  )
+}
+
 export default function Dashboard() {
-  const { user } = useUser()
+  const { isLoaded, user } = useUser()
   const [stats, setStats] = useState({ totalConversations: 1284, activeConversations: 42, totalMessages: 12500, botHandledRate: 94.2 })
 
-  useEffect(() => {
-    if (!user) {
-      window.location.href = '/sign-in'
-      return
-    }
-    initBusiness()
-  }, [user])
+  const initBusiness = useCallback(async () => {
+    const ownerEmail = user?.primaryEmailAddress?.emailAddress
+    if (!ownerEmail) return
 
-  async function initBusiness() {
     try {
       let res
       try {
         res = await axios.post(API + '/api/business', {
           name: user?.fullName || 'Mi Negocio',
-          ownerEmail: user?.primaryEmailAddress?.emailAddress,
+          ownerEmail,
           ownerName: user?.fullName || 'Dueño',
         })
       } catch {
-        res = await axios.get(API + '/api/business/email/' + user?.primaryEmailAddress?.emailAddress)
+        res = await axios.get(API + '/api/business/email/' + ownerEmail)
       }
       const s = await axios.get(API + '/api/business/' + res.data.id + '/stats')
       setStats({
@@ -255,7 +275,20 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (!isLoaded) return
+    if (!user) {
+      window.location.href = '/sign-in'
+      return
+    }
+    const loadBusiness = async () => {
+      await initBusiness()
+    }
+
+    void loadBusiness()
+  }, [initBusiness, isLoaded, user])
 
   const userInitial = user?.firstName?.[0] || 'U'
   const kpis = [
@@ -514,11 +547,19 @@ export default function Dashboard() {
           border: 1px solid var(--line);
           border-radius: 13px;
           background: #fff;
+          box-shadow: 0 16px 36px rgba(15, 23, 42, 0.05);
         }
 
         .kpi-card {
           min-height: 218px;
           padding: 31px;
+          transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+        .kpi-card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(0, 107, 75, .28);
+          box-shadow: 0 20px 42px rgba(15, 23, 42, 0.08);
         }
 
         .kpi-top {
@@ -557,6 +598,77 @@ export default function Dashboard() {
           font-size: 37px;
           letter-spacing: -0.04em;
           line-height: 1;
+        }
+
+        .ops-strip {
+          grid-column: 1 / -1;
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 18px;
+          padding: 18px;
+          border: 1px solid rgba(0, 107, 75, .18);
+          border-radius: 14px;
+          background:
+            radial-gradient(circle at 8% 0, rgba(32, 214, 111, .12), transparent 18rem),
+            linear-gradient(135deg, #ffffff 0%, #f3fbf6 100%);
+          box-shadow: 0 18px 42px rgba(15, 23, 42, 0.05);
+        }
+
+        .ops-card {
+          min-height: 116px;
+          padding: 18px;
+          border: 1px solid rgba(0, 107, 75, .12);
+          border-radius: 10px;
+          background: rgba(255, 255, 255, .86);
+        }
+
+        .ops-card span {
+          display: block;
+          margin-bottom: 9px;
+          color: #52606f;
+          font-size: 13px;
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+
+        .ops-card strong {
+          display: block;
+          color: #071b14;
+          font-size: 18px;
+          line-height: 1.15;
+        }
+
+        .ops-card p {
+          margin: 9px 0 0;
+          color: #4b5563;
+          font-size: 14px;
+          line-height: 1.35;
+        }
+
+        .ops-card.action {
+          background: #071b14;
+          color: #fff;
+        }
+
+        .ops-card.action span,
+        .ops-card.action p {
+          color: #b8f5d3;
+        }
+
+        .ops-card.action strong {
+          color: #fff;
+        }
+
+        .ops-card.action button {
+          width: 100%;
+          min-height: 36px;
+          margin-top: 14px;
+          border: 0;
+          border-radius: 8px;
+          background: #31e981;
+          color: #03150d;
+          font-weight: 900;
+          cursor: pointer;
         }
 
         .main-column,
@@ -958,6 +1070,12 @@ export default function Dashboard() {
             padding: 16px 14px;
             border-color: #bfc9c2;
             border-radius: 9px;
+            box-shadow: none;
+          }
+
+          .kpi-card:hover {
+            transform: none;
+            box-shadow: none;
           }
 
           .kpi-top {
@@ -985,6 +1103,42 @@ export default function Dashboard() {
 
           .kpi-card strong {
             font-size: 24px;
+          }
+
+          .ops-strip {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 18px;
+            padding: 12px;
+            border-color: #bfc9c2;
+            border-radius: 9px;
+            background: #fff;
+            box-shadow: none;
+          }
+
+          .ops-card {
+            min-height: auto;
+            padding: 13px;
+            border-radius: 8px;
+          }
+
+          .ops-card span {
+            margin-bottom: 5px;
+            font-size: 10px;
+          }
+
+          .ops-card strong {
+            font-size: 14px;
+          }
+
+          .ops-card p {
+            font-size: 11px;
+          }
+
+          .ops-card.action button {
+            min-height: 34px;
+            font-size: 12px;
           }
 
           .panel {
@@ -1407,6 +1561,8 @@ export default function Dashboard() {
             ))}
           </div>
 
+          <OpsSummary />
+
           <div className="main-column">
             <WeeklyChart />
             <section className="panel timeline-panel">
@@ -1450,6 +1606,8 @@ export default function Dashboard() {
             </article>
           ))}
         </div>
+
+        <OpsSummary />
 
         <WeeklyChart />
         <AiBrain />
