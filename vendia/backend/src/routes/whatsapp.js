@@ -18,6 +18,7 @@ whatsappRouter.get('/webhook', (req, res) => {
 })
 
 whatsappRouter.post('/webhook', async (req, res) => {
+  console.log('📨 Mensaje recibido:', JSON.stringify(req.body, null, 2))
   res.sendStatus(200)
 
   try {
@@ -36,7 +37,7 @@ whatsappRouter.post('/webhook', async (req, res) => {
       }
     }
   } catch (error) {
-    console.error('Error en webhook:', error)
+    console.error('❌ Error en webhook:', error)
   }
 })
 
@@ -46,12 +47,16 @@ async function handleIncomingMessage({ phoneNumberId, msg, contacts }) {
   const userText    = msg.text.body
   const contactName = contacts?.[0]?.profile?.name ?? 'Cliente'
 
+  console.log(`💬 Mensaje de ${waId}: ${userText}`)
+
   const business = await prisma.business.findUnique({
     where: { waPhoneId: phoneNumberId },
     include: { botConfig: true },
   })
 
-  if (!business || !business.isActive || !business.botConfig) return
+  if (!business) { console.log('❌ No se encontró negocio con waPhoneId:', phoneNumberId); return }
+  if (!business.isActive) { console.log('❌ Negocio inactivo'); return }
+  if (!business.botConfig) { console.log('❌ Sin botConfig'); return }
 
   const contact = await prisma.contact.upsert({
     where: { businessId_waId: { businessId: business.id, waId } },
@@ -91,10 +96,10 @@ async function handleIncomingMessage({ phoneNumberId, msg, contacts }) {
       where: { id: conversation.id },
       data: { status: 'HUMAN_TAKEOVER' },
     })
-    const msg = '¡Entendido! 👋 En un momento te atenderá una persona de nuestro equipo.'
-    await sendWhatsAppMessage({ phoneNumberId, to: waId, message: msg })
+    const reply = '¡Entendido! 👋 En un momento te atenderá una persona de nuestro equipo.'
+    await sendWhatsAppMessage({ phoneNumberId, to: waId, message: reply })
     await prisma.message.create({
-      data: { conversationId: conversation.id, role: 'ASSISTANT', content: msg },
+      data: { conversationId: conversation.id, role: 'ASSISTANT', content: reply },
     })
     return
   }
@@ -106,6 +111,8 @@ async function handleIncomingMessage({ phoneNumberId, msg, contacts }) {
     history: conversation.messages,
     userMessage: userText,
   })
+
+  console.log(`🤖 Respuesta: ${replyText}`)
 
   await sendWhatsAppMessage({ phoneNumberId, to: waId, message: replyText })
   await prisma.message.create({
