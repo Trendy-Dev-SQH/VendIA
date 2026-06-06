@@ -1,12 +1,22 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { SignOutButton, useUser } from '@clerk/nextjs'
 import axios from 'axios'
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
-const navItems = [
+type SectionKey = 'dashboard' | 'chats' | 'knowledge' | 'clients' | 'settings'
+
+const sectionMeta: Record<SectionKey, { title: string; subtitle: string }> = {
+  dashboard: { title: 'Dashboard', subtitle: 'Resumen de la actividad de tu asistente' },
+  chats: { title: 'Conversaciones', subtitle: 'Gestiona conversaciones activas, escaladas y cerradas' },
+  knowledge: { title: 'Base de Conocimiento', subtitle: 'Entrena la IA con catalogo, reglas y preguntas frecuentes' },
+  clients: { title: 'Clientes', subtitle: 'Consulta contactos, historial y oportunidades comerciales' },
+  settings: { title: 'Configuracion', subtitle: 'Administra negocio, integraciones, plan y seguridad' },
+}
+
+const navItems: Array<{ key: SectionKey; label: string; icon: string }> = [
   { key: 'dashboard', label: 'Dashboard', icon: 'grid' },
   { key: 'chats', label: 'Conversaciones', icon: 'chat' },
   { key: 'knowledge', label: 'Base de Conocimiento', icon: 'book' },
@@ -14,10 +24,10 @@ const navItems = [
   { key: 'settings', label: 'Configuración', icon: 'gear' },
 ]
 
-const mobileNav = [
+const mobileNav: Array<{ key: SectionKey; label: string; icon: string }> = [
   { key: 'dashboard', label: 'Dashboard', icon: 'grid' },
   { key: 'chats', label: 'Chats', icon: 'chat' },
-  { key: 'clients', label: 'Clientes', icon: 'users' },
+  { key: 'knowledge', label: 'Conocimiento', icon: 'book' },
   { key: 'settings', label: 'Ajustes', icon: 'gear' },
 ]
 
