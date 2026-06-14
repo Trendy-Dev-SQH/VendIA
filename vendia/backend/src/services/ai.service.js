@@ -4,6 +4,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
 export async function generateBotReply({ botConfig, history, userMessage }) {
   const model = genAI.getGenerativeModel({
+
     model: 'gemini-pro',
     systemInstruction: {
       parts: [{ text: buildSystemPrompt(botConfig) }],
