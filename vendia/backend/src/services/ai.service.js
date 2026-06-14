@@ -5,7 +5,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 export async function generateBotReply({ botConfig, history, userMessage }) {
   const model = genAI.getGenerativeModel({
     model: 'gemini-1.5-flash',
-    systemInstruction: buildSystemPrompt(botConfig),
+    systemInstruction: {
+      role: 'user',
+      parts: [{ text: buildSystemPrompt(botConfig) }],
+    },
   })
 
   const historyFormatted = history.slice(-20).map(msg => ({
