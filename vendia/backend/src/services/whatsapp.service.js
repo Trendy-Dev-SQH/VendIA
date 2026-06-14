@@ -23,18 +23,22 @@ export async function sendWhatsAppMessage({ phoneNumberId, to, message }) {
 }
 
 export async function markMessageAsRead({ phoneNumberId, messageId }) {
-  await axios.post(
-    `${WA_API_URL}/${phoneNumberId}/messages`,
-    {
-      messaging_product: 'whatsapp',
-      status: 'read',
-      message_id: messageId,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.META_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json',
+  try {
+    await axios.post(
+      `${WA_API_URL}/${phoneNumberId}/messages`,
+      {
+        messaging_product: 'whatsapp',
+        status: 'read',
+        message_id: messageId,
       },
-    }
-  )
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.META_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+  } catch (error) {
+    console.warn('⚠️ No se pudo marcar mensaje como leído:', error.message)
+  }
 }
