@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
-    "@google/generative-ai": "^0.24.1",
+    "@google/generative-ai": "^0.21.0",
     "@prisma/client": "^5.14.0",
     "axios": "^1.7.0",
     "cors": "^2.8.5",
