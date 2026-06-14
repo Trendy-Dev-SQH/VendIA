@@ -4,7 +4,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
 export async function generateBotReply({ botConfig, history, userMessage }) {
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-1.5-flash-latest',
     systemInstruction: {
       parts: [{ text: buildSystemPrompt(botConfig) }],
       role: 'user'
