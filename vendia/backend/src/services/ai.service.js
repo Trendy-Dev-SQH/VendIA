@@ -4,13 +4,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
 export async function generateBotReply({ botConfig, history, userMessage }) {
   const model = genAI.getGenerativeModel({
-
-    model: 'gemini-pro',
-    systemInstruction: {
-      parts: [{ text: buildSystemPrompt(botConfig) }],
-      role: 'user'
-    }
+    model: 'gemini-1.5-flash',
   })
+
+  const systemPrompt = buildSystemPrompt(botConfig)
 
   const historyFormatted = history.slice(-20).map(msg => ({
     role: msg.role === 'USER' ? 'user' : 'model',
@@ -19,6 +16,7 @@ export async function generateBotReply({ botConfig, history, userMessage }) {
 
   const chat = model.startChat({
     history: historyFormatted,
+    systemInstruction: systemPrompt,
   })
 
   const result = await chat.sendMessage(userMessage)
