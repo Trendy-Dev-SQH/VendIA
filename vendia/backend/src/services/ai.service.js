@@ -4,28 +4,20 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
 export async function generateBotReply({ botConfig, history, userMessage }) {
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-1.5-flash',
   })
 
-  const systemMessage = buildSystemPrompt(botConfig)
-
-  const historyFormatted = [
-    {
-      role: 'user',
-      parts: [{ text: systemMessage }],
-    },
-    {
-      role: 'model',
-      parts: [{ text: 'Entendido. Estoy listo para ayudar a los clientes.' }],
-    },
-    ...history.slice(-20).map(msg => ({
-      role: msg.role === 'USER' ? 'user' : 'model',
-      parts: [{ text: msg.content }],
-    })),
-  ]
+  const historyFormatted = history.slice(-20).map(msg => ({
+    role: msg.role === 'USER' ? 'user' : 'model',
+    parts: [{ text: msg.content }],
+  }))
 
   const chat = model.startChat({
-    history: historyFormatted,
+    history: [
+      { role: 'user', parts: [{ text: buildSystemPrompt(botConfig) }] },
+      { role: 'model', parts: [{ text: 'Entendido, seguiré estas instrucciones.' }] },
+      ...historyFormatted,
+    ],
   })
 
   const result = await chat.sendMessage(userMessage)
