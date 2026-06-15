@@ -3,7 +3,6 @@ import { prisma } from '../lib/prisma.js'
 
 export const businessRouter = Router()
 
-// Crear o recuperar un negocio
 businessRouter.post('/', async (req, res) => {
   const { name, ownerEmail, ownerName } = req.body
   try {
@@ -11,7 +10,6 @@ businessRouter.post('/', async (req, res) => {
       where: { ownerEmail },
       include: { botConfig: true }
     })
-
     if (!business) {
       business = await prisma.business.create({
         data: {
@@ -29,14 +27,12 @@ businessRouter.post('/', async (req, res) => {
         include: { botConfig: true }
       })
     }
-
     res.json(business)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
 })
 
-// Obtener negocio por email
 businessRouter.get('/email/:email', async (req, res) => {
   try {
     const business = await prisma.business.findUnique({
@@ -50,39 +46,32 @@ businessRouter.get('/email/:email', async (req, res) => {
   }
 })
 
-// Obtener estadísticas del dashboard
 businessRouter.get('/:id/stats', async (req, res) => {
   try {
     const businessId = req.params.id
-
     const totalConversations = await prisma.conversation.count({
       where: { businessId }
     })
-
     const activeConversations = await prisma.conversation.count({
       where: {
         businessId,
         status: { in: ['BOT_ACTIVE', 'HUMAN_TAKEOVER'] }
       }
     })
-
     const totalMessages = await prisma.message.count({
       where: {
         conversation: { businessId }
       }
     })
-
     const humanConversations = await prisma.conversation.count({
       where: {
         businessId,
         status: 'HUMAN_TAKEOVER'
       }
     })
-
     const botHandledRate = totalConversations > 0
       ? Math.round(((totalConversations - humanConversations) / totalConversations) * 100)
       : 100
-
     res.json({
       totalConversations,
       activeConversations,
@@ -94,7 +83,6 @@ businessRouter.get('/:id/stats', async (req, res) => {
   }
 })
 
-// Actualizar configuración del bot
 businessRouter.put('/:id/bot-config', async (req, res) => {
   const { botName, businessContext, catalog, faq } = req.body
   try {
@@ -116,6 +104,37 @@ businessRouter.put('/:id/bot-config', async (req, res) => {
       }
     })
     res.json(botConfig)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+businessRouter.get('/:id/conversations', async (req, res) => {
+  try {
+    const conversations = await prisma.conversation.findMany({
+      where: { businessId: req.params.id },
+      include: {
+        contact: true,
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: { lastMsgAt: 'desc' },
+    })
+    res.json(conversations)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+businessRouter.get('/:id/conversations/:conversationId/messages', async (req, res) => {
+  try {
+    const messages = await prisma.message.findMany({
+      where: { conversationId: req.params.conversationId },
+      orderBy: { createdAt: 'asc' },
+    })
+    res.json(messages)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
